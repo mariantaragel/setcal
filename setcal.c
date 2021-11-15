@@ -1,6 +1,21 @@
 #include <stdio.h>
+#include <stdlib.h>
 
-int main()
+typedef struct {
+    char **elements;
+    int size;
+    int capacity;    
+} Set;
+
+
+int main(int argc, char **argv)
 {
-    return 0;
+    if (argc != 2){
+        fprintf(stderr, "Chyba!\n");
+        return EXIT_FAILURE;
+    }
+
+    Set universe;
+
+    return EXIT_SUCCESS;
 }
