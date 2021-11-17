@@ -128,6 +128,29 @@ void add_set_to_list(Set_list* set_list, Set* new_set){
 ///  ======================================================================== ///
 
 /**
+ * Function print set on stdout
+ * 
+ * @param set set to print
+ */
+void print_set(Set_list *set_list, Set set)
+{
+    for (int i = 0; i < set.cardinality; i++){
+        if (!i){
+            if (set_list->size == 1){
+                printf("U");
+            }
+            else {
+                printf("S");
+            }
+        }
+        printf(" %s", set.elements[i]);
+    }
+    printf("\n");
+}
+
+///  ======================================================================== ///
+
+/**
  *  Function parses options given in file
  *
  * @param[in] file - pointer to filestream
@@ -178,8 +201,8 @@ int read_set(FILE* file, Set_list* set_list)
     element[elem_idx] = '\0';
     add_element_to_set(&new_set, element, elem_idx);
     add_set_to_list(set_list, &new_set);
-
-
+    print_set(set_list, new_set);
+    
     return 1;
 }
 
@@ -219,7 +242,9 @@ int read_option(char *filename)
                 break;
             }
             case 'S':{
-                read_set(file, &set_list);
+                if (!read_set(file, &set_list)){
+                    return 0;
+                }
                 break;
             }
             case 'R':{}
