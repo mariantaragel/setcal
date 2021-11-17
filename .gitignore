@@ -1,2 +1,5 @@
 sets.txt
 rel.txt
+.idea
+cmake-build-*/
+
