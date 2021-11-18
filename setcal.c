@@ -80,14 +80,22 @@ void free_set_list(Set_list* set_list)
 ///  ======================================================================== ///
 
 /**
- *  Function add set to list
+ *  Function to add element to set
  *
- * @param[in] set_list
- * @param[in] new_set - set, that will be added to list
+ * @param[in] set
+ * @param[in] elem
+ * @param elem_length
  */
 
-void add_element_to_set(Set *set, char* elem, int elem_length)
+int add_element_to_set(Set *set, char* elem, int elem_length)
 {
+    for (int i = 0; i < set->cardinality; i++){
+        if (strcmp(set->elements[i], elem) == 0){
+            fprintf(stderr, "Element was already stored!\n");
+            return 0;
+        }
+    }
+    
     if (set->elements == NULL){
         set->elements = (char**) malloc(sizeof(char*));
         set->cardinality = 1;
@@ -100,6 +108,8 @@ void add_element_to_set(Set *set, char* elem, int elem_length)
     }
 
     memcpy(set->elements[set->cardinality - 1], elem, elem_length + 1);
+
+    return 1;
 }
 
 ///  ======================================================================== ///
@@ -151,6 +161,38 @@ void print_set(Set_list *set_list, Set set)
 ///  ======================================================================== ///
 
 /**
+ * Function to check syntax of element
+ * 
+ * @param element element to check
+ */
+int check_element_syntax(char *element)
+{
+    char *command[] = {"empty", "card", "complement", "union",
+    "intersect", "minus", "subseteq", "subset", "equals",
+    "reflexive", "symmetric", "antisymmetric", "transitive",
+    "function", "domain", "codomain", "injective",
+    "surjective", "bijective", "true", "false"};
+    
+    for (int i = 0; element[i] != '\0'; i++){
+        if (!(isalpha(element[i]))){
+            fprintf(stderr, "Wrong element syntax!\n");
+            return 0;
+        }
+    }
+
+    for (int i = 0; i < 21; i++){
+        if (strcmp(element, command[i]) == 0){
+            fprintf(stderr, "Set contains identifier of command!\n");
+            return 0;
+        }
+    }
+    
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
  *  Function parses options given in file
  *
  * @param[in] file - pointer to filestream
@@ -167,6 +209,12 @@ int read_set(FILE* file, Set_list* set_list)
     Set new_set;
     set_ctor(&new_set);
 
+    if (c != ' '){
+        fprintf(stderr, "Wrong syntax of input file!\n");
+        return 0;
+    }
+    
+
     /// Skip all white spaces before first element
     while(isblank(c)){
         c = fgetc(file);
@@ -179,7 +227,7 @@ int read_set(FILE* file, Set_list* set_list)
 
         if (!isblank(c)){
 
-            if (elem_idx > 30){
+            if (elem_idx >= 30){
                 fprintf(stderr, "Wrong universe element!\n");
                 return 0;
             }
@@ -190,16 +238,25 @@ int read_set(FILE* file, Set_list* set_list)
         }
         else {
             element[elem_idx] = '\0';
-            add_element_to_set(&new_set, element, elem_idx);
+            if (!(check_element_syntax(element))){
+                return 0;
+            }
+            if (!(add_element_to_set(&new_set, element, elem_idx))){
+                return 0;
+            }
             elem_idx = 0;
-            // TODO: make function that checks syntax of element
 
         }
     }
 
     /// TODO: repeated code on lines 121-122 and 130-131, make function (?)
     element[elem_idx] = '\0';
-    add_element_to_set(&new_set, element, elem_idx);
+    if (!(check_element_syntax(element))){
+        return 0;
+    }
+    if (!(add_element_to_set(&new_set, element, elem_idx))){
+        return 0;
+    }
     add_set_to_list(set_list, &new_set);
     print_set(set_list, new_set);
     
