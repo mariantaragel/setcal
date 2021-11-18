@@ -207,9 +207,10 @@ void print_set(Set_list *set_list, Set set)
  * Function to check syntax of element
  * 
  * @param[in] element - element to check
+ * @param[in] set_list
  * @return 0 - element has wrong syntax, 1 in other case
  */
-int check_element_syntax(char *element)
+int check_element_syntax(char *element, Set_list set_list)
 {
     char *command[] = {"empty", "card", "complement", "union",
     "intersect", "minus", "subseteq", "subset", "equals",
@@ -227,6 +228,19 @@ int check_element_syntax(char *element)
     for (int i = 0; i < 21; i++){
         if (strcmp(element, command[i]) == 0){
             fprintf(stderr, "Set contains identifier of command!\n");
+            return 0;
+        }
+    }
+
+    int match = 0;
+    if (set_list.size > 0){
+        for (int i = 0; i < set_list.sets[0].cardinality; i++){
+            if (strcmp(element, set_list.sets[0].elements[i]) == 0){
+                match = 1;
+            }
+        }
+        if (!match){
+            fprintf(stderr, "Error: Element %s isn't in universe\n", element);
             return 0;
         }
     }
@@ -282,20 +296,19 @@ int read_set(FILE* file, Set_list* set_list)
         }
         else {
             element[elem_idx] = '\0';
-            if (!(check_element_syntax(element))){
+            if (!(check_element_syntax(element, *set_list))){
                 return 0;
             }
             if (!(add_element_to_set(&new_set, element, elem_idx))){
                 return 0;
             }
             elem_idx = 0;
-
         }
     }
 
-    /// TODO: repeated code on lines 284-290 and 297-303, make function (?)
+    /// TODO: repeated code on lines 298-304 and 310-316, make function (?)
     element[elem_idx] = '\0';
-    if (!(check_element_syntax(element))){
+    if (!(check_element_syntax(element, *set_list))){
         return 0;
     }
     if (!(add_element_to_set(&new_set, element, elem_idx))){
