@@ -84,7 +84,7 @@ void free_set_list(Set_list* set_list)
  *
  * @param[in] set
  * @param[in] elem
- * @param elem_length
+ * @param[in] elem_length
  */
 
 int add_element_to_set(Set *set, char* elem, int elem_length)
@@ -138,6 +138,49 @@ void add_set_to_list(Set_list* set_list, Set* new_set){
 ///  ======================================================================== ///
 
 /**
+ * Function prints complement of set
+ *
+ * @param set - set to print
+ * @param set_list
+ * @return 0 error, 1 - given set number is valid
+ */
+
+int set_complement(Set_list* set_list, int set_number)
+{
+
+    if (set_number > set_list->size){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    /// Universe
+    char** universe_elems = set_list->sets[0].elements;
+    int universe_size = set_list->sets[0].cardinality;
+
+    /// Given set on line set_number
+    char** given_set_elems = set_list->sets[set_number - 1].elements;
+    int set_size = set_list->sets[set_number - 1].cardinality;
+
+
+    int set_idx = 0;
+
+    printf("S");
+    for (int i = 0; i < universe_size; ++i) {
+        if ( set_idx < set_size && strcmp(universe_elems[i], given_set_elems[set_idx]) == 0){
+            set_idx++;
+            continue;
+        }
+        else {
+            printf(" %s", universe_elems[i]);
+        }
+    }
+    printf("\n");
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
  * Function print set on stdout
  * 
  * @param set set to print
@@ -163,7 +206,8 @@ void print_set(Set_list *set_list, Set set)
 /**
  * Function to check syntax of element
  * 
- * @param element element to check
+ * @param[in] element - element to check
+ * @return 0 - element has wrong syntax, 1 in other case
  */
 int check_element_syntax(char *element)
 {
@@ -249,7 +293,7 @@ int read_set(FILE* file, Set_list* set_list)
         }
     }
 
-    /// TODO: repeated code on lines 121-122 and 130-131, make function (?)
+    /// TODO: repeated code on lines 284-290 and 297-303, make function (?)
     element[elem_idx] = '\0';
     if (!(check_element_syntax(element))){
         return 0;
