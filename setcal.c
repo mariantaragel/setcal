@@ -261,13 +261,16 @@ int read_option(char *filename)
 }
 ///  ======================================================================== ///
 int empty(char *c)
-{
-    if (c == '{}'
+{    int result;
+    result = strcmp(*c, '{}');
+    if (result = 0 )
     {
-        return false;
+       return false;
     }
-    return true;
-    
+    else
+    {
+        return true;
+    }
 }
 
 ///  ======================================================================== ///
