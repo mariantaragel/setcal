@@ -207,25 +207,18 @@ int set_card(Set_list *set_list, int set_number)
  */
 void print_set(Set_list *set_list, Set set)
 {
-    if (set.cardinality == 0){
-        if (set_list->size == 1){
-            printf("U\n");
-        }
-        else {
-            printf("S\n");
-        }
+    if (set_list->size == 1){
+        printf("U");
+    }
+    else {
+        printf("S");
     }
 
+    if (set.cardinality == 0){
+        printf("\n");
+    }
     else {
         for (int i = 0; i < set.cardinality; i++){
-            if (!i){
-                if (set_list->size == 1){
-                    printf("U");
-                }
-                else {
-                    printf("S");
-                }
-            }
             printf(" %s", set.elements[i]);
         }
         printf("\n");
