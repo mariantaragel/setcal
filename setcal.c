@@ -185,6 +185,7 @@ int set_complement(Set_list* set_list, int set_number)
  * 
  * @param set_list
  * @param set_number
+ * @return 0 error, 1 - given set number is valid
  */
 int set_card(Set_list *set_list, int set_number)
 {
@@ -223,6 +224,44 @@ void print_set(Set_list *set_list, Set set)
         }
         printf("\n");
     }
+}
+
+///  ======================================================================== ///
+
+/**
+ * Function print union of sets
+ * 
+ * @param set_list
+ * @param set_number_1
+ * @param set_number_2
+ * @return 0 error, 1 - given set number is valid
+ */
+int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
+{
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    printf("S");
+    for (int i = 0; i < set_list->sets[set_number_1 - 1].cardinality; i++){
+        printf(" %s",set_list->sets[set_number_1 - 1].elements[i]);
+    }
+
+    for (int i = 0; i < set_list->sets[set_number_2 - 1].cardinality; i++){
+        int found = 0;
+        for (int j = 0; j < set_list->sets[set_number_1 - 1].cardinality; j++){
+            if (strcmp(set_list->sets[set_number_2 - 1].elements[i], set_list->sets[set_number_1 - 1].elements[j]) == 0){
+                found = 1;
+            }
+        }
+        if (!found){
+            printf(" %s",set_list->sets[set_number_2 - 1].elements[i]);
+        }        
+    }
+    printf("\n");
+    
+    return 1;
 }
 
 ///  ======================================================================== ///
