@@ -243,20 +243,27 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
         return 0;
     }
 
+    int size_1 = set_list->sets[set_number_1 - 1].cardinality;
+    char** set_1 = set_list->sets[set_number_1 - 1].elements;
+
+    int size_2 = set_list->sets[set_number_2 - 1].cardinality;
+    char** set_2 = set_list->sets[set_number_2 - 1].elements;
+
+
     printf("S");
-    for (int i = 0; i < set_list->sets[set_number_1 - 1].cardinality; i++){
-        printf(" %s",set_list->sets[set_number_1 - 1].elements[i]);
+    for (int i = 0; i < size_1; i++){
+        printf(" %s", set_1[i]);
     }
 
-    for (int i = 0; i < set_list->sets[set_number_2 - 1].cardinality; i++){
+    for (int i = 0; i < size_2; i++){
         int found = 0;
-        for (int j = 0; j < set_list->sets[set_number_1 - 1].cardinality; j++){
-            if (strcmp(set_list->sets[set_number_2 - 1].elements[i], set_list->sets[set_number_1 - 1].elements[j]) == 0){
+        for (int j = 0; j < size_1; j++){
+            if (strcmp(set_2[i], set_1[j]) == 0){
                 found = 1;
             }
         }
         if (!found){
-            printf(" %s",set_list->sets[set_number_2 - 1].elements[i]);
+            printf(" %s", set_2[i]);
         }        
     }
     printf("\n");
