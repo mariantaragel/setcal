@@ -140,7 +140,7 @@ void add_set_to_list(Set_list* set_list, Set* new_set){
 /**
  * Function prints complement of set
  *
- * @param set - set to print
+ * @param set_number
  * @param set_list
  * @return 0 error, 1 - given set number is valid
  */
@@ -181,24 +181,55 @@ int set_complement(Set_list* set_list, int set_number)
 ///  ======================================================================== ///
 
 /**
+ * Function print number of elements in set
+ * 
+ * @param set_list
+ * @param set_number
+ */
+int set_card(Set_list *set_list, int set_number)
+{
+    if (set_number > set_list->size){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    printf("%d\n", set_list->sets[set_number - 1].cardinality);
+
+    return 1;   
+}
+
+///  ======================================================================== ///
+
+/**
  * Function print set on stdout
  * 
  * @param set set to print
  */
 void print_set(Set_list *set_list, Set set)
 {
-    for (int i = 0; i < set.cardinality; i++){
-        if (!i){
-            if (set_list->size == 1){
-                printf("U");
-            }
-            else {
-                printf("S");
-            }
+    if (set.cardinality == 0){
+        if (set_list->size == 1){
+            printf("U\n");
         }
-        printf(" %s", set.elements[i]);
+        else {
+            printf("S\n");
+        }
     }
-    printf("\n");
+
+    else {
+        for (int i = 0; i < set.cardinality; i++){
+            if (!i){
+                if (set_list->size == 1){
+                    printf("U");
+                }
+                else {
+                    printf("S");
+                }
+            }
+            printf(" %s", set.elements[i]);
+        }
+        printf("\n");
+    }
 }
 
 ///  ======================================================================== ///
@@ -267,11 +298,16 @@ int read_set(FILE* file, Set_list* set_list)
     Set new_set;
     set_ctor(&new_set);
 
-    if (c != ' '){
+    if (c != ' ' && c != '\n'){
         fprintf(stderr, "Wrong syntax of input file!\n");
         return 0;
     }
-    
+
+    if (c == '\n'){
+        add_set_to_list(set_list, &new_set);
+        print_set(set_list, new_set);
+        return 1;
+    }
 
     /// Skip all white spaces before first element
     while(isblank(c)){
@@ -316,7 +352,7 @@ int read_set(FILE* file, Set_list* set_list)
     }
     add_set_to_list(set_list, &new_set);
     print_set(set_list, new_set);
-    
+
     return 1;
 }
 
