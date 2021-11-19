@@ -396,6 +396,20 @@ int read_set(FILE* file, Set_list* set_list)
 }
 
 ///  ======================================================================== ///
+/*
+*   is arraz empty
+*   return true or false
+*/
+int empty(char *c)
+{   int result;
+    reslut = strcmp(*c, '{}');
+    if (result == 0)
+    {
+        return 1;
+    }
+    return 0;   
+}
+///  ======================================================================== ///
 
 /**
  *  Function parses options given in file
