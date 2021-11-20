@@ -334,7 +334,9 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 ///  ======================================================================== ///
 
 /**
- * Function prints minus of 2 sets
+ * Function prints:
+ * true - set is subset of other set
+ * false - in other case
  *
  * @param[in] set_list
  * @param[in] set_number_1
@@ -342,7 +344,7 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
  * @return 0 given set numbers are invalid, 1 input is correct
  */
 
-int subset(Set_list *set_list, int set_number_1, int set_number_2)
+int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 {
 
     if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
@@ -383,6 +385,36 @@ int subset(Set_list *set_list, int set_number_1, int set_number_2)
     printf("true\n");
     return 1;
 }
+
+///  ======================================================================== ///
+
+/**
+ * Function prints:
+ * true - set is empty
+ * false - not empty
+ *
+ * @param[in] set_list
+ * @param[in] set_number
+ * @return 0 given set number is valid, 1 input is correct
+ */
+
+int is_set_empty(Set_list *set_list, int set_number)
+{
+    if (set_number > set_list->size){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    if (set_list->sets[set_number - 1].cardinality == 0){
+        printf("true\n");
+    }
+    else {
+        printf("false\n");
+    }
+
+    return 1;
+}
+
 
 ///  ======================================================================== ///
 
@@ -505,27 +537,13 @@ int read_set(FILE* file, Set_list* set_list)
     add_set_to_list(set_list, &new_set);
 
     /// Sort set elements in alphabetical order
-
     qsort(new_set.elements, new_set.cardinality, sizeof (char*), my_comparator);
     print_set(set_list, new_set);
 
     return 1;
 }
 
-///  ======================================================================== ///
-/*
-*   is arraz empty
-*   return true or false
-*/
-int empty(char *c)
-{   int result;
-    result = strcmp(*c, '{}');
-    if (result == 0)
-    {
-        return 1;
-    }
-    return 0;
-}
+
 ///  ======================================================================== ///
 
 /**
@@ -574,6 +592,8 @@ int read_option(char *filename)
 
     return 1;
 }
+
+//  ======================================================================== ///
 
 int main(int argc, char **argv)
 {
