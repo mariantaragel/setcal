@@ -322,10 +322,65 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
         if (!is_found) {
             printf(" %s", first_set[i]);
         }
+        is_found = 0;
     }
 
     printf("\n");
 
+    return 1;
+}
+
+
+///  ======================================================================== ///
+
+/**
+ * Function prints minus of 2 sets
+ *
+ * @param[in] set_list
+ * @param[in] set_number_1
+ * @param[in] set_number_2
+ * @return 0 given set numbers are invalid, 1 input is correct
+ */
+
+int subset(Set_list *set_list, int set_number_1, int set_number_2)
+{
+
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    char** first_set = set_list->sets[set_number_1 - 1].elements;
+    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+
+    char** second_set = set_list->sets[set_number_2 - 1].elements;
+    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+
+    /// Subset can't be greater than superset or equal to it
+    if (first_set_size >= second_set_size){
+        printf("false\n");
+        return 1;
+    }
+
+    int has_elem = 0;
+    int curr_set_idx = 0;
+
+    for (int i = 0; i < first_set_size; ++i) {
+        for (int j = curr_set_idx; j < second_set_size && !has_elem; ++j) {
+
+            if ( strcmp(first_set[i], second_set[j]) == 0 ){
+                has_elem = 1;
+                curr_set_idx = j + 1;
+            }
+        }
+        if (!has_elem){
+            printf("false\n");
+            return 1;
+        }
+        has_elem = 0;
+    }
+
+    printf("true\n");
     return 1;
 }
 
