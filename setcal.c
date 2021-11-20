@@ -14,6 +14,15 @@ typedef struct{
 } Set_list;
 
 
+///  ======================================================================== ///
+
+int my_comparator(const void* s1, const void* s2)
+{
+    return strcmp(*(const char**)s1, *(const char**)s2);
+}
+
+///  ======================================================================== ///
+
 /**
  * Constructor for set
  *
@@ -95,7 +104,7 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
             return 0;
         }
     }
-    
+
     if (set->elements == NULL){
         set->elements = (char**) malloc(sizeof(char*));
         set->cardinality = 1;
@@ -182,7 +191,7 @@ int set_complement(Set_list* set_list, int set_number)
 
 /**
  * Function print number of elements in set
- * 
+ *
  * @param set_list
  * @param set_number
  * @return 0 error, 1 - given set number is valid
@@ -196,14 +205,14 @@ int set_card(Set_list *set_list, int set_number)
 
     printf("%d\n", set_list->sets[set_number - 1].cardinality);
 
-    return 1;   
+    return 1;
 }
 
 ///  ======================================================================== ///
 
 /**
  * Function print set on stdout
- * 
+ *
  * @param set set to print
  */
 void print_set(Set_list *set_list, Set set)
@@ -230,7 +239,7 @@ void print_set(Set_list *set_list, Set set)
 
 /**
  * Function print union of sets
- * 
+ *
  * @param set_list
  * @param set_number_1
  * @param set_number_2
@@ -264,10 +273,10 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
         }
         if (!found){
             printf(" %s", set_2[i]);
-        }        
+        }
     }
     printf("\n");
-    
+
     return 1;
 }
 
@@ -276,16 +285,13 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 /**
  * Function prints minus of 2 sets
  *
- * @param set_list
- * @param set_number_1
- * @param set_number_2
+ * @param[in] set_list
+ * @param[in] set_number_1
+ * @param[in] set_number_2
  * @return 0 error, 1 - given set number is valid
  */
 int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    ///  S1: 3, 6, 7, 16, 48
-    ///  S2: 0, 6, 7, 9, 15, 65, 100, 109
-    ///  SR: 3, 16, 48
 
     if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
@@ -303,7 +309,6 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 
     int curr_s2_idx = 0;
 
-    printf("MINUS\n");
     printf("S");
 
     for (int i = 0; i < first_set_size; ++i) {
@@ -324,24 +329,23 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-
 ///  ======================================================================== ///
 
 /**
  * Function to check syntax of element
- * 
+ *
  * @param[in] element - element to check
  * @param[in] set_list
  * @return 0 - element has wrong syntax, 1 in other case
  */
-int check_element_syntax(char *element, Set_list set_list)
+int check_element_syntax(char *element, Set_list* set_list)
 {
     char *command[] = {"empty", "card", "complement", "union",
-    "intersect", "minus", "subseteq", "subset", "equals",
-    "reflexive", "symmetric", "antisymmetric", "transitive",
-    "function", "domain", "codomain", "injective",
-    "surjective", "bijective", "true", "false"};
-    
+                       "intersect", "minus", "subseteq", "subset", "equals",
+                       "reflexive", "symmetric", "antisymmetric", "transitive",
+                       "function", "domain", "codomain", "injective",
+                       "surjective", "bijective", "true", "false"};
+
     for (int i = 0; element[i] != '\0'; i++){
         if (!(isalpha(element[i]))){
             fprintf(stderr, "Wrong element syntax!\n");
@@ -357,9 +361,9 @@ int check_element_syntax(char *element, Set_list set_list)
     }
 
     int match = 0;
-    if (set_list.size > 0){
-        for (int i = 0; i < set_list.sets[0].cardinality; i++){
-            if (strcmp(element, set_list.sets[0].elements[i]) == 0){
+    if (set_list->size > 0){
+        for (int i = 0; i < set_list->sets[0].cardinality; i++){
+            if (strcmp(element, set_list->sets[0].elements[i]) == 0){
                 match = 1;
             }
         }
@@ -368,7 +372,7 @@ int check_element_syntax(char *element, Set_list set_list)
             return 0;
         }
     }
-    
+
     return 1;
 }
 
@@ -403,7 +407,7 @@ int read_set(FILE* file, Set_list* set_list)
     }
 
     /// Skip all white spaces before first element
-    while(isblank(c)){
+    while (isblank(c)){
         c = fgetc(file);
     }
 
@@ -415,7 +419,7 @@ int read_set(FILE* file, Set_list* set_list)
         if (!isblank(c)){
 
             if (elem_idx >= 30){
-                fprintf(stderr, "Wrong universe element!\n");
+                fprintf(stderr, "Wrong set element!\n");
                 return 0;
             }
 
@@ -425,7 +429,7 @@ int read_set(FILE* file, Set_list* set_list)
         }
         else {
             element[elem_idx] = '\0';
-            if (!(check_element_syntax(element, *set_list))){
+            if (!(check_element_syntax(element, set_list))){
                 return 0;
             }
             if (!(add_element_to_set(&new_set, element, elem_idx))){
@@ -437,13 +441,17 @@ int read_set(FILE* file, Set_list* set_list)
 
     /// TODO: repeated code on lines 298-304 and 310-316, make function (?)
     element[elem_idx] = '\0';
-    if (!(check_element_syntax(element, *set_list))){
+    if (!(check_element_syntax(element, set_list))){
         return 0;
     }
     if (!(add_element_to_set(&new_set, element, elem_idx))){
         return 0;
     }
     add_set_to_list(set_list, &new_set);
+
+    /// Sort set elements in alphabetical order
+
+    qsort(new_set.elements, new_set.cardinality, sizeof (char*), my_comparator);
     print_set(set_list, new_set);
 
     return 1;
@@ -456,12 +464,12 @@ int read_set(FILE* file, Set_list* set_list)
 */
 int empty(char *c)
 {   int result;
-    reslut = strcmp(*c, '{}');
+    result = strcmp(*c, '{}');
     if (result == 0)
     {
         return 1;
     }
-    return 0;   
+    return 0;
 }
 ///  ======================================================================== ///
 
@@ -492,12 +500,7 @@ int read_option(char *filename)
         }
 
         switch (c) {
-            case 'U':{
-                if (!read_set(file, &set_list)){
-                    return 0;
-                }
-                break;
-            }
+            case 'U':
             case 'S':{
                 if (!read_set(file, &set_list)){
                     return 0;
