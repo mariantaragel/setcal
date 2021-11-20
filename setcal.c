@@ -687,12 +687,7 @@ int read_option(char *filename)
         }
 
         switch (c) {
-            case 'U':{
-                if (!read_set(file, &set_list)){
-                    return 0;
-                }
-                break;
-            }
+            case 'U':{}
             case 'S':{
                 if (!read_set(file, &set_list)){
                     return 0;
