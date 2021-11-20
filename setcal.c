@@ -468,6 +468,120 @@ int check_element_syntax(char *element, Set_list* set_list)
 /**
  *  Function parses options given in file
  *
+ * @param file
+ * @param set_list
+ */
+int read_command(FILE *file, Set_list *set_list)
+{
+    char *command[] = {"empty", "card", "complement", "union",
+                       "intersect", "minus", "subseteq", "subset", "equals",
+                       "reflexive", "symmetric", "antisymmetric", "transitive",
+                       "function", "domain", "codomain", "injective",
+                       "surjective", "bijective"};
+
+    int c = fgetc(file);
+    if ((char)c != ' '){
+        fprintf(stderr, "Wrong syntax of input file!\n");
+        return 0;
+    }
+
+    char loaded_command[15];
+    int index = 0;
+    while (((c = fgetc(file)) != ' ') && (c != '\n')){
+        if (index > 14){
+            fprintf(stderr, "Command %s doesn't exist\n", loaded_command);
+            return 0;
+        }
+        if (!isblank(c)){
+            loaded_command[index] = (char)c;
+            index++;
+        }
+    }
+    loaded_command[index] = '\0';
+
+    int set_number_1 = 0;
+    int set_number_2 = 0;
+    fscanf(file, "%d", &set_number_1);
+    if (!set_number_1){
+        fprintf(stderr, "Too few arguments!\n");
+        return 0;
+    }
+    fscanf(file, "%d", &set_number_2);
+    if (set_number_2){
+        if ((c = fgetc(file)) != '\n'){
+            fprintf(stderr, "Too many arguments!\n");
+            return 0;
+        }
+    }
+
+    int i;
+    for (i = 0; i < 19; i++){
+        if (strcmp(loaded_command, command[i]) == 0){
+            break;
+        }
+    }
+    switch (i){
+        case 0:{
+            if (!is_set_empty(set_list, set_number_1)){
+                return 0;
+            }            
+            break;
+        }
+        case 1:{
+            if (!set_card(set_list, set_number_1)){
+                return 0;
+            }            
+            break;
+        }
+        case 2:{
+            if (!set_complement(set_list, set_number_1)){
+                return 0;
+            }            
+            break;
+        }
+        case 3:{
+            if (!set_number_2){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!union_of_sets(set_list, set_number_1, set_number_2)){
+                return 0;
+            }            
+            break;
+        }
+        case 5:{
+            if (!set_number_2){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!minus_of_sets(set_list, set_number_1, set_number_2)){
+                return 0;
+            }            
+            break;
+        }
+        case 7:{
+            if (!set_number_2){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!minus_of_sets(set_list, set_number_1, set_number_2)){
+                return 0;
+            }            
+            break;
+        }
+        default:{
+            fprintf(stderr, "Command %s doesn't exist\n", loaded_command);
+            return 0;
+        }
+    }
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
+ *  Function parses options given in file
+ *
  * @param[in] file - pointer to filestream
  * @param[in] set_list
  * @return    0 in case of error, 1 in other case
@@ -573,7 +687,12 @@ int read_option(char *filename)
         }
 
         switch (c) {
-            case 'U':
+            case 'U':{
+                if (!read_set(file, &set_list)){
+                    return 0;
+                }
+                break;
+            }
             case 'S':{
                 if (!read_set(file, &set_list)){
                     return 0;
@@ -581,7 +700,11 @@ int read_option(char *filename)
                 break;
             }
             case 'R':{}
-            case 'C':{}
+            case 'C':{
+                if (!read_command(file, &set_list)){
+                    return 0;
+                }
+            }
             default:{} // wrong input
         }
 
