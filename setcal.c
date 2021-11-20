@@ -274,6 +274,60 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 ///  ======================================================================== ///
 
 /**
+ * Function prints minus of 2 sets
+ *
+ * @param set_list
+ * @param set_number_1
+ * @param set_number_2
+ * @return 0 error, 1 - given set number is valid
+ */
+int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
+{
+    ///  S1: 3, 6, 7, 16, 48
+    ///  S2: 0, 6, 7, 9, 15, 65, 100, 109
+    ///  SR: 3, 16, 48
+
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    char** first_set = set_list->sets[set_number_1 - 1].elements;
+    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+
+    char** second_set = set_list->sets[set_number_2 - 1].elements;
+    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+
+    int is_found = 0;
+
+
+    int curr_s2_idx = 0;
+
+    printf("MINUS\n");
+    printf("S");
+
+    for (int i = 0; i < first_set_size; ++i) {
+
+        for (int j = curr_s2_idx; j < second_set_size && !is_found; ++j) {
+            if ( strcmp(first_set[i], second_set[j]) == 0 ){
+                is_found = 1;
+                curr_s2_idx = j + 1;
+            }
+        }
+        if (!is_found) {
+            printf(" %s", first_set[i]);
+        }
+    }
+
+    printf("\n");
+
+    return 1;
+}
+
+
+///  ======================================================================== ///
+
+/**
  * Function to check syntax of element
  * 
  * @param[in] element - element to check
