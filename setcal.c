@@ -469,20 +469,17 @@ int is_set_empty(Set_list *set_list, int set_number)
     return 1;
 }
 
-
 ///  ======================================================================== ///
-/*
+
+/**
 * Print true or false:
-* true - equals
-* false - not equals
+* true - equal
+* false - not equal
 * @param[in] set_list
 * @param[in] set_number_1
 * @param[in] set_number_2
-*
-*
 */
-
-int is_set_equels(Set_list *set_list, int set_number_1, int set_number_2)
+int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 {
     char** first_set = set_list->sets[set_number_1 - 1].elements;
     int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
@@ -494,29 +491,29 @@ int is_set_equels(Set_list *set_list, int set_number_1, int set_number_2)
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
-    if(first_set_size != second_set_size)
-    {
+
+    if (first_set_size != second_set_size){
         printf("false");
         return 0;
     }
-    if (strcmp(*first_set, *second_set) == 0)
-    {
+    if (strcmp(*first_set, *second_set) == 0){
         printf("true");
         return 1;  
     }
-    else
-    {
+    else {
         printf("false");
         return 0;
     }
 }
 
 ///  ======================================================================== ///
-/*
+
+/**
 * Functionprint intersect of 2 sets
 * 
-*
-*
+* @param[in] set_list
+* @param[in] set_number_1
+* @param[in] set_number_2
 */
 int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
@@ -533,12 +530,9 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 
     printf("S");
 
-    for (int i = 0; i < first_set_size; i++)
-    {
-        for (int j = 0; j < second_set_size; j++)
-        {
-            if (strcmp(first_set[i], second_set[j]) == 0)
-            {
+    for (int i = 0; i < first_set_size; i++){
+        for (int j = 0; j < second_set_size; j++){
+            if (strcmp(first_set[i], second_set[j]) == 0){
                printf(" %s", first_set[i]);
             }
         }
@@ -628,7 +622,6 @@ int read_command(FILE *file, Set_list *set_list)
 
     loaded_command[0] = c;
 
-
     while (((c = fgetc(file)) != ' ') && (c != '\n')){
         if (index > 14){
             fprintf(stderr, "Command %s doesn't exist\n", loaded_command);
@@ -650,12 +643,11 @@ int read_command(FILE *file, Set_list *set_list)
     }
     fscanf(file, "%d", &set_number_2);
     if (set_number_2){
-
         while (isblank(c)){
             c = fgetc(file);
         }
 
-        if ((c = fgetc(file)) != '\n' && c != EOF){
+        if ((c != '\n') && (c != EOF)){
             fprintf(stderr, "Too many arguments!\n");
             return 0;
         }
@@ -696,6 +688,16 @@ int read_command(FILE *file, Set_list *set_list)
             }
             break;
         }
+        case 4:{
+            if (!set_number_2){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!intersect_of_sets(set_list, set_number_1, set_number_2)){
+                return 0;
+            }
+            break;
+        }
         case 5:{
             if (!set_number_2){
                 fprintf(stderr, "Too few arguments!\n");
@@ -722,6 +724,16 @@ int read_command(FILE *file, Set_list *set_list)
                 return 0;
             }
             if (!is_subset(set_list, set_number_1, set_number_2)){
+                return 0;
+            }
+            break;
+        }
+        case 8:{
+            if (!set_number_2){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!are_sets_equal(set_list, set_number_1, set_number_2)){
                 return 0;
             }
             break;
