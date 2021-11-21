@@ -437,7 +437,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
             printf("true\n");
         }
     }
-    
+
     return 1;
 }
 
@@ -524,6 +524,7 @@ int check_element_syntax(char *element, Set_list* set_list)
  *
  * @param file
  * @param set_list
+ * @return 0 - command was wrong, 1 in other case
  */
 int read_command(FILE *file, Set_list *set_list)
 {
@@ -533,14 +534,23 @@ int read_command(FILE *file, Set_list *set_list)
                        "function", "domain", "codomain", "injective",
                        "surjective", "bijective"};
 
-    int c = fgetc(file);
-    if ((char)c != ' '){
+    char c = fgetc(file);
+    if (c != ' '){
         fprintf(stderr, "Wrong syntax of input file!\n");
         return 0;
     }
 
+    /// Skip all spaced before command
+    while (isblank(c)){
+        c = fgetc(file);
+    }
+
     char loaded_command[15];
-    int index = 0;
+    int index = 1;
+
+    loaded_command[0] = c;
+
+
     while (((c = fgetc(file)) != ' ') && (c != '\n')){
         if (index > 14){
             fprintf(stderr, "Command %s doesn't exist\n", loaded_command);
@@ -562,7 +572,12 @@ int read_command(FILE *file, Set_list *set_list)
     }
     fscanf(file, "%d", &set_number_2);
     if (set_number_2){
-        if ((c = fgetc(file)) != '\n'){
+
+        while (isblank(c)){
+            c = fgetc(file);
+        }
+
+        if ((c = fgetc(file)) != '\n' && c != EOF){
             fprintf(stderr, "Too many arguments!\n");
             return 0;
         }
@@ -578,19 +593,19 @@ int read_command(FILE *file, Set_list *set_list)
         case 0:{
             if (!is_set_empty(set_list, set_number_1)){
                 return 0;
-            }            
+            }
             break;
         }
         case 1:{
             if (!set_card(set_list, set_number_1)){
                 return 0;
-            }            
+            }
             break;
         }
         case 2:{
             if (!set_complement(set_list, set_number_1)){
                 return 0;
-            }            
+            }
             break;
         }
         case 3:{
@@ -600,7 +615,7 @@ int read_command(FILE *file, Set_list *set_list)
             }
             if (!union_of_sets(set_list, set_number_1, set_number_2)){
                 return 0;
-            }            
+            }
             break;
         }
         case 5:{
@@ -610,7 +625,7 @@ int read_command(FILE *file, Set_list *set_list)
             }
             if (!minus_of_sets(set_list, set_number_1, set_number_2)){
                 return 0;
-            }            
+            }
             break;
         }
         case 6:{
@@ -620,7 +635,7 @@ int read_command(FILE *file, Set_list *set_list)
             }
             if (!is_subseteq(set_list, set_number_1, set_number_2)){
                 return 0;
-            }            
+            }
             break;
         }
         case 7:{
@@ -630,7 +645,7 @@ int read_command(FILE *file, Set_list *set_list)
             }
             if (!is_subset(set_list, set_number_1, set_number_2)){
                 return 0;
-            }            
+            }
             break;
         }
         default:{
