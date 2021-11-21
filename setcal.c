@@ -475,8 +475,9 @@ int is_set_empty(Set_list *set_list, int set_number)
 * Print true or false:
 * true - equals
 * false - not equals
-*
-* 
+* @param[in] set_list
+* @param[in] set_number_1
+* @param[in] set_number_2
 *
 *
 */
@@ -508,6 +509,43 @@ int is_set_equels(Set_list *set_list, int set_number_1, int set_number_2)
         printf("false");
         return 0;
     }
+}
+
+///  ======================================================================== ///
+/*
+* Functionprint intersect of 2 sets
+* 
+*
+*
+*/
+int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
+{
+    char** first_set = set_list->sets[set_number_1 - 1].elements;
+    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+
+    char** second_set = set_list->sets[set_number_2 - 1].elements;
+    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    printf("S");
+
+    for (int i = 0; i < first_set_size; i++)
+    {
+        for (int j = 0; j < second_set_size; j++)
+        {
+            if (strcmp(first_set[i], second_set[j]) == 0)
+            {
+               printf(" %s", first_set[i]);
+            }
+        }
+    }
+    printf("\n");
+
+    return 1;
 }
 
 ///  ======================================================================== ///
