@@ -471,6 +471,46 @@ int is_set_empty(Set_list *set_list, int set_number)
 
 
 ///  ======================================================================== ///
+/*
+* Print true or false:
+* true - equals
+* false - not equals
+*
+* 
+*
+*
+*/
+
+int is_set_equels(Set_list *set_list, int set_number_1, int set_number_2)
+{
+    char** first_set = set_list->sets[set_number_1 - 1].elements;
+    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+
+    char** second_set = set_list->sets[set_number_2 - 1].elements;
+    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+    if(first_set_size != second_set_size)
+    {
+        printf("false");
+        return 0;
+    }
+    if (strcmp(*first_set, *second_set) == 0)
+    {
+        printf("true");
+        return 1;  
+    }
+    else
+    {
+        printf("false");
+        return 0;
+    }
+}
+
+///  ======================================================================== ///
 
 /**
  * Function to check syntax of element
