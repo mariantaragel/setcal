@@ -1,3 +1,10 @@
+/**
+ * @name setcal.c
+ * @details set and relation calculator
+ * @authors Marian Taragel, Troitckii Georgii, Tomas Prokop
+ * @date 21.11.2021
+ */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,7 +35,6 @@ int my_comparator(const void* s1, const void* s2)
  *
  * @param[in] set
  */
-
 void set_ctor(Set *set)
 {
     set->elements = NULL;
@@ -42,7 +48,6 @@ void set_ctor(Set *set)
  *
  * @param[in] set
  */
-
 void free_set(Set* set)
 {
     for (int i = 0; i < set->cardinality; ++i) {
@@ -61,7 +66,6 @@ void free_set(Set* set)
  *
  * @param[in] set_list
  */
-
 void set_list_ctor(Set_list* set_list)
 {
     set_list->sets = NULL;
@@ -75,7 +79,6 @@ void set_list_ctor(Set_list* set_list)
  *
  * @param[in] set_list
  */
-
 void free_set_list(Set_list* set_list)
 {
     for (int i = 0; i < set_list->size; ++i) {
@@ -95,7 +98,6 @@ void free_set_list(Set_list* set_list)
  * @param[in] elem
  * @param[in] elem_length
  */
-
 int add_element_to_set(Set *set, char* elem, int elem_length)
 {
     for (int i = 0; i < set->cardinality; i++){
@@ -129,7 +131,6 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
  * @param[in] set_list
  * @param[in] new_set - set, that will be added to list
  */
-
 void add_set_to_list(Set_list* set_list, Set* new_set){
 
     if (set_list->sets == NULL){
@@ -153,10 +154,8 @@ void add_set_to_list(Set_list* set_list, Set* new_set){
  * @param set_list
  * @return 0 error, 1 - given set number is valid
  */
-
 int set_complement(Set_list* set_list, int set_number)
 {
-
     if (set_number > set_list->size){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
@@ -169,7 +168,6 @@ int set_complement(Set_list* set_list, int set_number)
     /// Given set on line set_number
     char** given_set_elems = set_list->sets[set_number - 1].elements;
     int set_size = set_list->sets[set_number - 1].cardinality;
-
 
     int set_idx = 0;
 
@@ -252,27 +250,27 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
         return 0;
     }
 
-    int size_1 = set_list->sets[set_number_1 - 1].cardinality;
-    char** set_1 = set_list->sets[set_number_1 - 1].elements;
+    char** first_set = set_list->sets[set_number_1 - 1].elements;
+    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
 
-    int size_2 = set_list->sets[set_number_2 - 1].cardinality;
-    char** set_2 = set_list->sets[set_number_2 - 1].elements;
+    char** second_set = set_list->sets[set_number_2 - 1].elements;
+    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
 
 
     printf("S");
-    for (int i = 0; i < size_1; i++){
-        printf(" %s", set_1[i]);
+    for (int i = 0; i < first_set_size; i++){
+        printf(" %s", first_set[i]);
     }
 
-    for (int i = 0; i < size_2; i++){
+    for (int i = 0; i < second_set_size; i++){
         int found = 0;
-        for (int j = 0; j < size_1; j++){
-            if (strcmp(set_2[i], set_1[j]) == 0){
+        for (int j = 0; j < first_set_size; j++){
+            if (strcmp(second_set[i], first_set[j]) == 0){
                 found = 1;
             }
         }
         if (!found){
-            printf(" %s", set_2[i]);
+            printf(" %s", second_set[i]);
         }
     }
     printf("\n");
@@ -343,7 +341,6 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
  * @param[in] set_number_2
  * @return 0 given set numbers are invalid, 1 input is correct
  */
-
 int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 {
 
@@ -390,6 +387,64 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 
 /**
  * Function prints:
+ * true - set is subset of other set
+ * false - in other case
+ *
+ * @param[in] set_list
+ * @param[in] set_number_1
+ * @param[in] set_number_2
+ * @return 0 given set numbers are invalid, 1 input is correct
+ */
+int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
+{
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    char** first_set = set_list->sets[set_number_1 - 1].elements;
+    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+
+    char** second_set = set_list->sets[set_number_2 - 1].elements;
+    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+
+    // Subseteq can't be greater than superset
+    if (first_set_size > second_set_size){
+        printf("false\n");
+    }
+    else if (first_set_size == 0){
+        printf("true\n");
+    }
+    else {
+        int found;
+        int has_elem = 0;
+        for (int i = 0; i < first_set_size; i++){
+            found = 0;
+            for (int j = 0; j < second_set_size; j++){
+                if (strcmp(first_set[i], second_set[j])== 0){
+                    found = 1;
+                    has_elem++;
+                    break;
+                }
+            }
+            if (!found){
+                printf("false\n");
+                break;
+            }
+        }
+
+        if (found){
+            printf("true\n");
+        }
+    }
+    
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
+ * Function prints:
  * true - set is empty
  * false - not empty
  *
@@ -397,7 +452,6 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
  * @param[in] set_number
  * @return 0 given set number is valid, 1 input is correct
  */
-
 int is_set_empty(Set_list *set_list, int set_number)
 {
     if (set_number > set_list->size){
@@ -447,14 +501,14 @@ int check_element_syntax(char *element, Set_list* set_list)
         }
     }
 
-    int match = 0;
+    int found = 0;
     if (set_list->size > 0){
         for (int i = 0; i < set_list->sets[0].cardinality; i++){
             if (strcmp(element, set_list->sets[0].elements[i]) == 0){
-                match = 1;
+                found = 1;
             }
         }
-        if (!match){
+        if (!found){
             fprintf(stderr, "Error: Element %s isn't in universe\n", element);
             return 0;
         }
@@ -559,12 +613,22 @@ int read_command(FILE *file, Set_list *set_list)
             }            
             break;
         }
+        case 6:{
+            if (!set_number_2){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!is_subseteq(set_list, set_number_1, set_number_2)){
+                return 0;
+            }            
+            break;
+        }
         case 7:{
             if (!set_number_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!minus_of_sets(set_list, set_number_1, set_number_2)){
+            if (!is_subset(set_list, set_number_1, set_number_2)){
                 return 0;
             }            
             break;
@@ -586,12 +650,11 @@ int read_command(FILE *file, Set_list *set_list)
  * @param[in] set_list
  * @return    0 in case of error, 1 in other case
  */
-
 int read_set(FILE* file, Set_list* set_list)
 {
     char c = fgetc(file);
     char element[31] = {0};
-    int elem_idx = 0;
+    int elem_idx = 1;
 
     Set new_set;
     set_ctor(&new_set);
@@ -612,8 +675,7 @@ int read_set(FILE* file, Set_list* set_list)
         c = fgetc(file);
     }
 
-    /// Return first non white space char to stream
-    ungetc(c, file);
+    element[0] = c;
 
     while ((c = fgetc(file)) != '\n'){
 
@@ -666,7 +728,6 @@ int read_set(FILE* file, Set_list* set_list)
  * @param[in] filename
  * @return    0 - error, 1 - in other case
  */
-
 int read_option(char *filename)
 {
     FILE *file = fopen(filename, "r");
