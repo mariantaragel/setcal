@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Troitckii Georgii, Tomas Prokop
- * @date 21.11.2021
+ * @date 22.11.2021
  */
 
 #include <stdio.h>
@@ -23,7 +23,7 @@ typedef struct{
 
 ///  ======================================================================== ///
 
-int my_comparator(const void* s1, const void* s2)
+int str_comparator(const void* s1, const void* s2)
 {
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
@@ -114,7 +114,7 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
     }
     else {
         set->cardinality++;
-        set->elements = (char**) realloc(set->elements, sizeof(char**) * set->cardinality);
+        set->elements = (char**) realloc(set->elements, sizeof(char*) * set->cardinality);
         set->elements[set->cardinality - 1] = (char*) malloc(elem_length + 1);
     }
 
@@ -472,7 +472,7 @@ int is_set_empty(Set_list *set_list, int set_number)
 ///  ======================================================================== ///
 
 /**
-* Print true or false:
+* Prints
 * true - equal
 * false - not equal
 * @param[in] set_list
@@ -481,24 +481,27 @@ int is_set_empty(Set_list *set_list, int set_number)
 */
 int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 {
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
     char** first_set = set_list->sets[set_number_1 - 1].elements;
     int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
 
     char** second_set = set_list->sets[set_number_2 - 1].elements;
     int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
 
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
-        fprintf(stderr, "Can't step on nonexistent row!\n");
-        return 0;
-    }
 
     if (first_set_size != second_set_size){
         printf("false");
         return 0;
     }
+
+    /// TODO: rewrite it correctly, it compare only first elements in sets
     if (strcmp(*first_set, *second_set) == 0){
         printf("true");
-        return 1;  
+        return 1;
     }
     else {
         printf("false");
@@ -509,31 +512,32 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 ///  ======================================================================== ///
 
 /**
-* Functionprint intersect of 2 sets
-* 
+* Function prints intersect of 2 sets
+*
 * @param[in] set_list
 * @param[in] set_number_1
 * @param[in] set_number_2
 */
 int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
+    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
     char** first_set = set_list->sets[set_number_1 - 1].elements;
     int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
 
     char** second_set = set_list->sets[set_number_2 - 1].elements;
     int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
 
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
-        fprintf(stderr, "Can't step on nonexistent row!\n");
-        return 0;
-    }
 
     printf("S");
 
     for (int i = 0; i < first_set_size; i++){
         for (int j = 0; j < second_set_size; j++){
             if (strcmp(first_set[i], second_set[j]) == 0){
-               printf(" %s", first_set[i]);
+                printf(" %s", first_set[i]);
             }
         }
     }
@@ -758,8 +762,9 @@ int read_command(FILE *file, Set_list *set_list)
 int read_set(FILE* file, Set_list* set_list)
 {
     char c = fgetc(file);
-    char element[31] = {0};
-    int elem_idx = 1;
+    char element[32] = {0};
+    int elem_idx = 0;
+    int last_elem_idx = 0;
 
     Set new_set;
     set_ctor(&new_set);
@@ -775,50 +780,54 @@ int read_set(FILE* file, Set_list* set_list)
         return 1;
     }
 
-    /// Skip all white spaces before first element
-    while (isblank(c)){
-        c = fgetc(file);
+    /// Read the first element from the file
+    fscanf(file, "%31s", element);
+    if (strlen(element) > 30){
+        fprintf(stderr, "Wrong set element!\n");
+        return 0;
     }
+    last_elem_idx = strlen(element);
 
-    element[0] = c;
 
     while ((c = fgetc(file)) != '\n'){
-
-        if (!isblank(c)){
-
-            if (elem_idx >= 30){
-                fprintf(stderr, "Wrong set element!\n");
-                return 0;
-            }
-
-            element[elem_idx] = c;
-            elem_idx++;
-
+        if (isblank(c)){
+            elem_idx = 0;
+            continue;
         }
-        else {
-            element[elem_idx] = '\0';
+
+        if (elem_idx == 0){
+            element[last_elem_idx] = '\0';
             if (!(check_element_syntax(element, set_list))){
                 return 0;
             }
-            if (!(add_element_to_set(&new_set, element, elem_idx))){
+            if (!(add_element_to_set(&new_set, element, last_elem_idx))){
                 return 0;
             }
-            elem_idx = 0;
         }
+
+        if (elem_idx > 30){
+            fprintf(stderr, "Wrong set element!\n");
+            return 0;
+        }
+
+        element[elem_idx] = c;
+        elem_idx++;
+        last_elem_idx = elem_idx;
     }
 
-    /// TODO: repeated code on lines 298-304 and 310-316, make function (?)
-    element[elem_idx] = '\0';
+    /// Add last element to set
+    element[last_elem_idx] = '\0';
     if (!(check_element_syntax(element, set_list))){
         return 0;
     }
-    if (!(add_element_to_set(&new_set, element, elem_idx))){
+    if (!(add_element_to_set(&new_set, element, last_elem_idx))){
         return 0;
     }
+
     add_set_to_list(set_list, &new_set);
 
     /// Sort set elements in alphabetical order
-    qsort(new_set.elements, new_set.cardinality, sizeof (char*), my_comparator);
+    qsort(new_set.elements, new_set.cardinality, sizeof(char *), str_comparator);
     print_set(set_list, new_set);
 
     return 1;
