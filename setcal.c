@@ -20,6 +20,21 @@ typedef struct{
     int size;
 } Set_list;
 
+typedef struct{
+    char* first;
+    char* second;
+} Pair;
+
+typedef struct{
+    Pair* relations;
+    int number_of_pairs;
+} Relation;
+
+typedef struct{
+    Relation* relations;
+    int size;
+} Relation_list;
+
 
 ///  ======================================================================== ///
 
