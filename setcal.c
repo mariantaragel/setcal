@@ -387,7 +387,7 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 
 /**
  * Function prints:
- * true - set is subset of other set
+ * true - set is subseteq of other set
  * false - in other case
  *
  * @param[in] set_list
@@ -472,9 +472,8 @@ int is_set_empty(Set_list *set_list, int set_number)
 ///  ======================================================================== ///
 
 /**
-* Prints
-* true - equal
-* false - not equal
+* Prints true - equal, false - not equal
+* 
 * @param[in] set_list
 * @param[in] set_number_1
 * @param[in] set_number_2
@@ -492,21 +491,30 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
     char** second_set = set_list->sets[set_number_2 - 1].elements;
     int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
 
-
+    int match = 1;
     if (first_set_size != second_set_size){
-        printf("false");
-        return 0;
+        printf("false\n");
     }
-
-    /// TODO: rewrite it correctly, it compare only first elements in sets
-    if (strcmp(*first_set, *second_set) == 0){
-        printf("true");
-        return 1;
+    else if ((first_set_size == 0) && (second_set_size == 0)){
+        printf("true\n");
     }
     else {
-        printf("false");
-        return 0;
+        for (int i = 0; i < first_set_size; i++){
+            if (strcmp(first_set[i], second_set[i]) != 0){
+                printf("false\n");
+                match = 0;
+                break;
+            }
+            else {
+                continue;
+            }
+        }
+        if (match){
+            printf("true\n");
+        }
     }
+
+    return 1;
 }
 
 ///  ======================================================================== ///
