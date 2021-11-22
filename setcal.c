@@ -51,11 +51,15 @@ void set_ctor(Set *set)
 void free_set(Set* set)
 {
     for (int i = 0; i < set->cardinality; ++i) {
-        free(set->elements[i]);
-        set->elements[i] = NULL;
+        if (set->elements[i] != NULL) {
+            free(set->elements[i]);
+            set->elements[i] = NULL;
+        }
     }
-    free(set->elements);
-    set->elements = NULL;
+    if (set->elements != NULL) {
+        free(set->elements);
+        set->elements = NULL;
+    }
     set->cardinality = 0;
 }
 
@@ -84,8 +88,10 @@ void free_set_list(Set_list* set_list)
     for (int i = 0; i < set_list->size; ++i) {
         free_set(&set_list->sets[i]);
     }
-    free(set_list->sets);
-    set_list->sets = NULL;
+    if (set_list->sets != NULL) {
+        free(set_list->sets);
+        set_list->sets = NULL;
+    }
     set_list->size = 0;
 }
 
@@ -100,6 +106,7 @@ void free_set_list(Set_list* set_list)
  */
 int add_element_to_set(Set *set, char* elem, int elem_length)
 {
+
     for (int i = 0; i < set->cardinality; i++){
         if (strcmp(set->elements[i], elem) == 0){
             fprintf(stderr, "Element was already stored!\n");
@@ -115,6 +122,7 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
     else {
         set->cardinality++;
         set->elements = (char**) realloc(set->elements, sizeof(char*) * set->cardinality);
+
         set->elements[set->cardinality - 1] = (char*) malloc(elem_length + 1);
     }
 
@@ -473,7 +481,7 @@ int is_set_empty(Set_list *set_list, int set_number)
 
 /**
 * Prints true - equal, false - not equal
-* 
+*
 * @param[in] set_list
 * @param[in] set_number_1
 * @param[in] set_number_2
@@ -772,7 +780,7 @@ int read_set(FILE* file, Set_list* set_list)
     char c = fgetc(file);
     char element[32] = {0};
     int elem_idx = 0;
-    int last_elem_idx = 0;
+    int last_elem_idx;
 
     Set new_set;
     set_ctor(&new_set);
@@ -791,6 +799,7 @@ int read_set(FILE* file, Set_list* set_list)
     /// Read the first element from the file
     fscanf(file, "%31s", element);
     if (strlen(element) > 30){
+        free_set(&new_set);
         fprintf(stderr, "Wrong set element!\n");
         return 0;
     }
@@ -806,15 +815,18 @@ int read_set(FILE* file, Set_list* set_list)
         if (elem_idx == 0){
             element[last_elem_idx] = '\0';
             if (!(check_element_syntax(element, set_list))){
+                free_set(&new_set);
                 return 0;
             }
             if (!(add_element_to_set(&new_set, element, last_elem_idx))){
+                free_set(&new_set);
                 return 0;
             }
         }
 
         if (elem_idx > 30){
             fprintf(stderr, "Wrong set element!\n");
+            free_set(&new_set);
             return 0;
         }
 
@@ -826,9 +838,11 @@ int read_set(FILE* file, Set_list* set_list)
     /// Add last element to set
     element[last_elem_idx] = '\0';
     if (!(check_element_syntax(element, set_list))){
+        free_set(&new_set);
         return 0;
     }
     if (!(add_element_to_set(&new_set, element, last_elem_idx))){
+        free_set(&new_set);
         return 0;
     }
 
@@ -862,8 +876,13 @@ int read_option(char *filename)
     Set_list set_list;
     set_list_ctor(&set_list);
 
+    int err_flag = 0;
+
     char c;
     while ((c = fgetc(file)) != EOF){
+
+        if (err_flag)
+            break;
 
         if (isblank(c)){
             continue;
@@ -873,17 +892,21 @@ int read_option(char *filename)
             case 'U':{}
             case 'S':{
                 if (!read_set(file, &set_list)){
-                    return 0;
+                    err_flag = 1;
                 }
                 break;
             }
             case 'R':{}
             case 'C':{
                 if (!read_command(file, &set_list)){
-                    return 0;
+                    err_flag = 1;
                 }
+                break;
             }
-            default:{} // wrong input
+            default:{
+                fprintf(stderr, "Bad option.\n");
+                err_flag = 1;
+            }
         }
 
     }
@@ -894,7 +917,7 @@ int read_option(char *filename)
     return 1;
 }
 
-//  ======================================================================== ///
+///  ======================================================================== ///
 
 int main(int argc, char **argv)
 {
