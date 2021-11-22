@@ -35,7 +35,6 @@ typedef struct{
     int size;
 } Relation_list;
 
-
 ///  ======================================================================== ///
 
 int str_comparator(const void* s1, const void* s2)
@@ -81,6 +80,24 @@ void free_set(Set* set)
 ///  ======================================================================== ///
 
 /**
+ *  Function free resources for pair
+ *
+ * @param[in] pair
+ */
+void free_pair(Pair *pair)
+{
+    if ((pair->first != NULL) && (pair->second != NULL)){
+        // double free or corruption (out)
+        free(pair->first);
+        pair->first = NULL;
+        free(pair->second);
+        pair->second = NULL;
+    }
+}
+
+///  ======================================================================== ///
+
+/**
  * Constructor for list of sets
  *
  * @param[in] set_list
@@ -108,6 +125,45 @@ void free_set_list(Set_list* set_list)
         set_list->sets = NULL;
     }
     set_list->size = 0;
+}
+
+///  ======================================================================== ///
+
+/**
+ * Constructor for list of relations
+ *
+ * @param[in] relation_list
+ */
+void relation_list_ctor(Relation_list *relation_list)
+{
+    relation_list->relations = NULL;
+    relation_list->size = 0;
+}
+
+///  ======================================================================== ///
+
+/**
+ * Constructor for pair
+ *
+ * @param[in] pair
+ */
+void pair_ctor(Pair *pair)
+{
+    pair->first = NULL;
+    pair->second = NULL;
+}
+
+///  ======================================================================== ///
+
+/**
+ * Constructor for relation
+ *
+ * @param[in] relation
+ */
+void relation_ctor(Relation *relation)
+{
+    relation->relations = NULL;
+    relation->number_of_pairs = 0;
 }
 
 ///  ======================================================================== ///
@@ -142,6 +198,43 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
     }
 
     memcpy(set->elements[set->cardinality - 1], elem, elem_length + 1);
+
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
+ *  Function to add element to set
+ *
+ * @param[in] set
+ * @param[in] elem
+ * @param[in] elem_length
+ */
+int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length, int second_length)
+{
+    if ((pair->first == NULL) && (pair->second == NULL)){
+        char *pointer;
+        pointer = malloc(sizeof(char) * (first_length + 1));
+        printf("%p", pointer);
+        pair->first = pointer;
+        if (pair->first == NULL){
+            fprintf(stderr, "Not enough memory!\n");
+            return 0;
+        }
+        pair->first = first;
+
+        pair->second = malloc(sizeof(char) * (second_length + 1));
+        if (pair->first == NULL){
+            fprintf(stderr, "Not enough memory!\n");
+            return 0;
+        }
+        pair->second = second;
+    }
+    else {
+        fprintf(stderr, "Not enough memory!\n");
+        return 0;
+    }
 
     return 1;
 }
@@ -787,6 +880,94 @@ int read_command(FILE *file, Set_list *set_list)
  *  Function parses options given in file
  *
  * @param[in] file - pointer to filestream
+ * @param[in] rel_list
+ * @return 0 in case of error, 1 in other case
+ */
+int read_relation(FILE *file)
+{
+    char c = fgetc(file);
+    if (c != ' ' && c != '\n'){
+        fprintf(stderr, "Wrong syntax of input file!\n");
+        return 0;
+    }
+
+    Relation new_relation;
+    relation_ctor(&new_relation);
+
+    if (c == '\n'){
+        //add_relation_to_list(relation_list, &new_relation);
+        return 1;
+    }
+
+    while ((c = fgetc(file)) != '\n'){
+        if (isblank(c)){
+            continue;
+        }
+
+        if (c != '('){
+            fprintf(stderr, "Wrong syntax of input file!\n");
+            return 0;
+        }
+        
+        int index_elem_1 = 0;
+        char element_1[31];
+        while ((c = fgetc(file)) != ' '){
+            element_1[index_elem_1] = c;
+            index_elem_1++;
+            if (index_elem_1 > 30){
+                fprintf(stderr, "Wrong set element!\n");
+                //free_relation(&new_relation);
+                return 0;
+            }
+        }
+        element_1[index_elem_1] = '\0';
+
+        int index_elem_2 = 0;
+        char element_2[31];
+        while ((c = fgetc(file)) != ')'){
+            element_2[index_elem_2] = c;
+            index_elem_2++;
+            if (index_elem_2 > 30){
+                fprintf(stderr, "Wrong set element!\n");
+                //free_relation(&new_relation);
+                return 0;
+            }
+        }
+        element_2[index_elem_2] = '\0';
+
+        Pair new_pair;
+        pair_ctor(&new_pair);
+
+        if (!(add_elements_to_pair(&new_pair, element_1, element_2, index_elem_1, index_elem_2))){
+            free_pair(&new_pair);
+            return 0;
+        }
+        /*
+        if (!(add_pair_to_relation(&new_relation, new_pair))){
+            free_relation(&new_relation);
+            return 0;
+        }
+        */
+        free_pair(&new_pair);
+        break;
+    }
+
+    /*
+    if (!(add_relation_to_list(relation_list, &new_relation))){
+        free_relation(&new_relation);
+        return 0;
+    }
+    */
+
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
+ *  Function parses options given in file
+ *
+ * @param[in] file - pointer to filestream
  * @param[in] set_list
  * @return    0 in case of error, 1 in other case
  */
@@ -891,6 +1072,9 @@ int read_option(char *filename)
     Set_list set_list;
     set_list_ctor(&set_list);
 
+    Relation_list relation_list;
+    relation_list_ctor(&relation_list);
+
     int err_flag = 0;
 
     char c;
@@ -911,7 +1095,12 @@ int read_option(char *filename)
                 }
                 break;
             }
-            case 'R':{}
+            case 'R':{
+                if (!read_relation(file)){
+                    err_flag = 1;
+                }
+                break;
+            }
             case 'C':{
                 if (!read_command(file, &set_list)){
                     err_flag = 1;
