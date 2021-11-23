@@ -214,22 +214,19 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
 int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length, int second_length)
 {
     if ((pair->first == NULL) && (pair->second == NULL)){
-        char *pointer;
-        pointer = malloc(sizeof(char) * (first_length + 1));
-        printf("%p", pointer);
-        pair->first = pointer;
+        pair->first = (char *) malloc(sizeof(char) * (first_length + 1));
         if (pair->first == NULL){
             fprintf(stderr, "Not enough memory!\n");
             return 0;
         }
-        pair->first = first;
+        strcpy(pair->first, first);
 
-        pair->second = malloc(sizeof(char) * (second_length + 1));
+        pair->second = (char *) malloc(sizeof(char) * (second_length + 1));
         if (pair->first == NULL){
             fprintf(stderr, "Not enough memory!\n");
             return 0;
         }
-        pair->second = second;
+        strcpy(pair->second, second);
     }
     else {
         fprintf(stderr, "Not enough memory!\n");
