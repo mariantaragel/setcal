@@ -1,8 +1,8 @@
 /**
  * @name setcal.c
  * @details set and relation calculator
- * @authors Marian Taragel, Troitckii Georgii, Tomas Prokop
- * @date 22.11.2021
+ * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
+ * @date 23.11.2021
  */
 
 #include <stdio.h>
@@ -65,12 +65,12 @@ void set_ctor(Set *set)
 void free_set(Set* set)
 {
     for (int i = 0; i < set->cardinality; ++i) {
-        if (set->elements[i] != NULL) {
+        if (set->elements[i] != NULL){
             free(set->elements[i]);
             set->elements[i] = NULL;
         }
     }
-    if (set->elements != NULL) {
+    if (set->elements != NULL){
         free(set->elements);
         set->elements = NULL;
     }
@@ -87,12 +87,33 @@ void free_set(Set* set)
 void free_pair(Pair *pair)
 {
     if ((pair->first != NULL) && (pair->second != NULL)){
-        // double free or corruption (out)
         free(pair->first);
         pair->first = NULL;
         free(pair->second);
         pair->second = NULL;
     }
+}
+
+///  ======================================================================== ///
+
+/**
+ *  Function free resources for relation
+ *
+ * @param[in] relation
+ */
+
+void free_relation(Relation *relation)
+{
+    for (int i = 0; i < relation->number_of_pairs; i++){
+        free_pair(&relation->relations[i]);
+    }
+
+    if (relation->relations != NULL) {
+        free(relation->relations);
+        relation->relations = NULL;
+    }
+
+    relation->relations = 0;
 }
 
 ///  ======================================================================== ///
@@ -244,7 +265,8 @@ int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length
  * @param[in] set_list
  * @param[in] new_set - set, that will be added to list
  */
-void add_set_to_list(Set_list* set_list, Set* new_set){
+void add_set_to_list(Set_list* set_list, Set* new_set)
+{
 
     if (set_list->sets == NULL){
         set_list->size = 1;
@@ -256,6 +278,60 @@ void add_set_to_list(Set_list* set_list, Set* new_set){
     }
 
     set_list->sets[set_list->size - 1] = *new_set;
+}
+
+///  ======================================================================== ///
+
+/**
+ *  Function add pair to relation
+ *
+ * @param[in] set_list
+ * @param[in] new_set - set, that will be added to list
+ */
+int add_pair_to_relation(Relation *relation, Pair *pair)
+{
+    if (relation->relations == NULL){
+        relation->number_of_pairs = 1;
+        relation->relations = (Pair *) malloc(sizeof(Pair));
+        if (relation->relations == NULL){
+            fprintf(stderr, "Not enough memory!\n");
+            return 0;
+        }
+        relation->number_of_pairs = 1;
+    }
+    else {
+        relation->number_of_pairs++;
+        relation->relations = (Pair *) realloc(relation->relations, sizeof(Pair) * relation->number_of_pairs);
+        if (relation->relations == NULL){
+            fprintf(stderr, "Not enough memory!\n");
+            return 0;
+        }
+    }
+
+    relation->relations[relation->number_of_pairs - 1] = *pair;
+
+    return 1;
+}
+
+///  ======================================================================== ///
+
+/**
+ * Function print relation on stdout
+ *
+ * @param[in] relation relation to print
+ */
+void print_relation(Relation relation)
+{
+    if (relation.number_of_pairs == 0){
+        printf("\n");
+    }
+    else {
+        printf("R");
+        for (int i = 0; i < relation.number_of_pairs; i++){
+            printf(" (%s %s)", relation.relations[i].first, relation.relations[i].second);
+        }
+        printf("\n");
+    }
 }
 
 ///  ======================================================================== ///
@@ -324,7 +400,7 @@ int set_card(Set_list *set_list, int set_number)
 /**
  * Function print set on stdout
  *
- * @param set set to print
+ * @param[in] set set to print
  */
 void print_set(Set_list *set_list, Set set)
 {
@@ -913,7 +989,7 @@ int read_relation(FILE *file)
             index_elem_1++;
             if (index_elem_1 > 30){
                 fprintf(stderr, "Wrong set element!\n");
-                //free_relation(&new_relation);
+                free_relation(&new_relation);
                 return 0;
             }
         }
@@ -926,7 +1002,7 @@ int read_relation(FILE *file)
             index_elem_2++;
             if (index_elem_2 > 30){
                 fprintf(stderr, "Wrong set element!\n");
-                //free_relation(&new_relation);
+                free_relation(&new_relation);
                 return 0;
             }
         }
@@ -939,15 +1015,15 @@ int read_relation(FILE *file)
             free_pair(&new_pair);
             return 0;
         }
-        /*
-        if (!(add_pair_to_relation(&new_relation, new_pair))){
+        if (!(add_pair_to_relation(&new_relation, &new_pair))){
             free_relation(&new_relation);
             return 0;
         }
-        */
-        free_pair(&new_pair);
-        break;
     }
+
+    print_relation(new_relation);
+
+    free_relation(&new_relation);
 
     /*
     if (!(add_relation_to_list(relation_list, &new_relation))){
