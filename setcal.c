@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 23.11.2021
+ * @date 24.11.2021
  */
 
 #include <stdio.h>
@@ -13,6 +13,7 @@
 typedef struct{
     char **elements;
     int cardinality;
+    int position;
 } Set;
 
 typedef struct{
@@ -26,8 +27,9 @@ typedef struct{
 } Pair;
 
 typedef struct{
-    Pair* relations;
+    Pair* pairs;
     int number_of_pairs;
+    int position;
 } Relation;
 
 typedef struct{
@@ -53,6 +55,7 @@ void set_ctor(Set *set)
 {
     set->elements = NULL;
     set->cardinality = 0;
+    set->position = 0;
 }
 
 ///  ======================================================================== ///
@@ -75,6 +78,7 @@ void free_set(Set* set)
         set->elements = NULL;
     }
     set->cardinality = 0;
+    set->position = 0;
 }
 
 ///  ======================================================================== ///
@@ -101,19 +105,19 @@ void free_pair(Pair *pair)
  *
  * @param[in] relation
  */
-
 void free_relation(Relation *relation)
 {
     for (int i = 0; i < relation->number_of_pairs; i++){
-        free_pair(&relation->relations[i]);
+        free_pair(&relation->pairs[i]);
     }
 
-    if (relation->relations != NULL) {
-        free(relation->relations);
-        relation->relations = NULL;
+    if (relation->pairs != NULL) {
+        free(relation->pairs);
+        relation->pairs = NULL;
     }
 
-    relation->relations = 0;
+    relation->pairs = 0;
+    relation->position = 0;
 }
 
 ///  ======================================================================== ///
@@ -151,7 +155,7 @@ void free_set_list(Set_list* set_list)
 ///  ======================================================================== ///
 
 /**
- * Constructor for list of relations
+ * Constructor for list of pairs
  *
  * @param[in] relation_list
  */
@@ -183,8 +187,9 @@ void pair_ctor(Pair *pair)
  */
 void relation_ctor(Relation *relation)
 {
-    relation->relations = NULL;
+    relation->pairs = NULL;
     relation->number_of_pairs = 0;
+    relation->position = 0;
 }
 
 ///  ======================================================================== ///
@@ -196,7 +201,7 @@ void relation_ctor(Relation *relation)
  * @param[in] elem
  * @param[in] elem_length
  */
-int add_element_to_set(Set *set, char* elem, int elem_length)
+int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
 {
 
     for (int i = 0; i < set->cardinality; i++){
@@ -219,6 +224,8 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
     }
 
     memcpy(set->elements[set->cardinality - 1], elem, elem_length + 1);
+
+    set->position = current_row;
 
     return 1;
 }
@@ -288,12 +295,12 @@ void add_set_to_list(Set_list* set_list, Set* new_set)
  * @param[in] set_list
  * @param[in] new_set - set, that will be added to list
  */
-int add_pair_to_relation(Relation *relation, Pair *pair)
+int add_pair_to_relation(Relation *relation, Pair *pair, int current_row)
 {
-    if (relation->relations == NULL){
+    if (relation->pairs == NULL){
         relation->number_of_pairs = 1;
-        relation->relations = (Pair *) malloc(sizeof(Pair));
-        if (relation->relations == NULL){
+        relation->pairs = (Pair *) malloc(sizeof(Pair));
+        if (relation->pairs == NULL){
             fprintf(stderr, "Not enough memory!\n");
             return 0;
         }
@@ -301,14 +308,15 @@ int add_pair_to_relation(Relation *relation, Pair *pair)
     }
     else {
         relation->number_of_pairs++;
-        relation->relations = (Pair *) realloc(relation->relations, sizeof(Pair) * relation->number_of_pairs);
-        if (relation->relations == NULL){
+        relation->pairs = (Pair *) realloc(relation->pairs, sizeof(Pair) * relation->number_of_pairs);
+        if (relation->pairs == NULL){
             fprintf(stderr, "Not enough memory!\n");
             return 0;
         }
     }
 
-    relation->relations[relation->number_of_pairs - 1] = *pair;
+    relation->pairs[relation->number_of_pairs - 1] = *pair;
+    relation->position = current_row;
 
     return 1;
 }
@@ -328,11 +336,23 @@ void print_relation(Relation relation)
     else {
         printf("R");
         for (int i = 0; i < relation.number_of_pairs; i++){
-            printf(" (%s %s)", relation.relations[i].first, relation.relations[i].second);
+            printf(" (%s %s)", relation.pairs[i].first, relation.pairs[i].second);
         }
         printf("\n");
     }
 }
+
+int check_set_existence(Set_list* set_list, int* row)
+{
+    for (int i = 0; i < set_list->size; ++i) {
+        if (set_list->sets[i].position == *row){
+            *row = i;
+            return 1;
+        }
+    }
+    return 0;
+}
+
 
 ///  ======================================================================== ///
 
@@ -345,7 +365,7 @@ void print_relation(Relation relation)
  */
 int set_complement(Set_list* set_list, int set_number)
 {
-    if (set_number > set_list->size){
+    if ( !check_set_existence(set_list, &set_number) ){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -355,8 +375,8 @@ int set_complement(Set_list* set_list, int set_number)
     int universe_size = set_list->sets[0].cardinality;
 
     /// Given set on line set_number
-    char** given_set_elems = set_list->sets[set_number - 1].elements;
-    int set_size = set_list->sets[set_number - 1].cardinality;
+    char** given_set_elems = set_list->sets[set_number].elements;
+    int set_size = set_list->sets[set_number].cardinality;
 
     int set_idx = 0;
 
@@ -385,12 +405,12 @@ int set_complement(Set_list* set_list, int set_number)
  */
 int set_card(Set_list *set_list, int set_number)
 {
-    if (set_number > set_list->size){
+    if ( !check_set_existence(set_list, &set_number) ){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    printf("%d\n", set_list->sets[set_number - 1].cardinality);
+    printf("%d\n", set_list->sets[set_number].cardinality);
 
     return 1;
 }
@@ -434,16 +454,17 @@ void print_set(Set_list *set_list, Set set)
  */
 int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+    if (   !check_set_existence(set_list, &set_number_1)
+           || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    char** first_set = set_list->sets[set_number_1 - 1].elements;
-    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    int first_set_size = set_list->sets[set_number_1].cardinality;
 
-    char** second_set = set_list->sets[set_number_2 - 1].elements;
-    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+    char** second_set = set_list->sets[set_number_2].elements;
+    int second_set_size = set_list->sets[set_number_2].cardinality;
 
 
     printf("S");
@@ -480,16 +501,17 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
 
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+    if (   !check_set_existence(set_list, &set_number_1)
+           || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    char** first_set = set_list->sets[set_number_1 - 1].elements;
-    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    int first_set_size = set_list->sets[set_number_1].cardinality;
 
-    char** second_set = set_list->sets[set_number_2 - 1].elements;
-    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+    char** second_set = set_list->sets[set_number_2].elements;
+    int second_set_size = set_list->sets[set_number_2].cardinality;
 
     int is_found = 0;
 
@@ -533,16 +555,17 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 {
 
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+    if (   !check_set_existence(set_list, &set_number_1)
+           || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    char** first_set = set_list->sets[set_number_1 - 1].elements;
-    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    int first_set_size = set_list->sets[set_number_1].cardinality;
 
-    char** second_set = set_list->sets[set_number_2 - 1].elements;
-    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+    char** second_set = set_list->sets[set_number_2].elements;
+    int second_set_size = set_list->sets[set_number_2].cardinality;
 
     /// Subset can't be greater than superset or equal to it
     if (first_set_size >= second_set_size){
@@ -586,16 +609,17 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
  */
 int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+    if (   !check_set_existence(set_list, &set_number_1)
+           || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    char** first_set = set_list->sets[set_number_1 - 1].elements;
-    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    int first_set_size = set_list->sets[set_number_1].cardinality;
 
-    char** second_set = set_list->sets[set_number_2 - 1].elements;
-    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+    char** second_set = set_list->sets[set_number_2].elements;
+    int second_set_size = set_list->sets[set_number_2].cardinality;
 
     // Subseteq can't be greater than superset
     if (first_set_size > second_set_size){
@@ -643,12 +667,12 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
  */
 int is_set_empty(Set_list *set_list, int set_number)
 {
-    if (set_number > set_list->size){
+    if ( !check_set_existence(set_list, &set_number) ){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    if (set_list->sets[set_number - 1].cardinality == 0){
+    if (set_list->sets[set_number].cardinality == 0){
         printf("true\n");
     }
     else {
@@ -669,16 +693,17 @@ int is_set_empty(Set_list *set_list, int set_number)
 */
 int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+    if (   !check_set_existence(set_list, &set_number_1)
+           || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    char** first_set = set_list->sets[set_number_1 - 1].elements;
-    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    int first_set_size = set_list->sets[set_number_1].cardinality;
 
-    char** second_set = set_list->sets[set_number_2 - 1].elements;
-    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+    char** second_set = set_list->sets[set_number_2].elements;
+    int second_set_size = set_list->sets[set_number_2].cardinality;
 
     int match = 1;
     if (first_set_size != second_set_size){
@@ -717,16 +742,25 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 */
 int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if ((set_number_1 > set_list->size) || (set_number_2 > set_list->size)){
+    if (   !check_set_existence(set_list, &set_number_1)
+           || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    char** first_set = set_list->sets[set_number_1 - 1].elements;
-    int first_set_size = set_list->sets[set_number_1 - 1].cardinality;
 
-    char** second_set = set_list->sets[set_number_2 - 1].elements;
-    int second_set_size = set_list->sets[set_number_2 - 1].cardinality;
+    for (int i = 0; i < set_list->size; ++i) {
+        if (set_list->sets[i].position == set_number_1){
+            set_number_1 = i;
+        }
+    }
+
+
+    char** first_set = set_list->sets[set_number_1].elements;
+    int first_set_size = set_list->sets[set_number_1].cardinality;
+
+    char** second_set = set_list->sets[set_number_2].elements;
+    int second_set_size = set_list->sets[set_number_2].cardinality;
 
 
     printf("S");
@@ -956,7 +990,7 @@ int read_command(FILE *file, Set_list *set_list)
  * @param[in] rel_list
  * @return 0 in case of error, 1 in other case
  */
-int read_relation(FILE *file)
+int read_relation(FILE *file, int current_row)
 {
     char c = fgetc(file);
     if (c != ' ' && c != '\n'){
@@ -981,7 +1015,7 @@ int read_relation(FILE *file)
             fprintf(stderr, "Wrong syntax of input file!\n");
             return 0;
         }
-        
+
         int index_elem_1 = 0;
         char element_1[31];
         while ((c = fgetc(file)) != ' '){
@@ -1015,7 +1049,7 @@ int read_relation(FILE *file)
             free_pair(&new_pair);
             return 0;
         }
-        if (!(add_pair_to_relation(&new_relation, &new_pair))){
+        if (!(add_pair_to_relation(&new_relation, &new_pair, current_row))){
             free_relation(&new_relation);
             return 0;
         }
@@ -1044,7 +1078,7 @@ int read_relation(FILE *file)
  * @param[in] set_list
  * @return    0 in case of error, 1 in other case
  */
-int read_set(FILE* file, Set_list* set_list)
+int read_set(FILE* file, Set_list* set_list, int current_row)
 {
     char c = fgetc(file);
     char element[32] = {0};
@@ -1087,7 +1121,7 @@ int read_set(FILE* file, Set_list* set_list)
                 free_set(&new_set);
                 return 0;
             }
-            if (!(add_element_to_set(&new_set, element, last_elem_idx))){
+            if (!(add_element_to_set(&new_set, element, last_elem_idx, current_row))){
                 free_set(&new_set);
                 return 0;
             }
@@ -1110,7 +1144,7 @@ int read_set(FILE* file, Set_list* set_list)
         free_set(&new_set);
         return 0;
     }
-    if (!(add_element_to_set(&new_set, element, last_elem_idx))){
+    if (!(add_element_to_set(&new_set, element, last_elem_idx, current_row))){
         free_set(&new_set);
         return 0;
     }
@@ -1149,6 +1183,7 @@ int read_option(char *filename)
     relation_list_ctor(&relation_list);
 
     int err_flag = 0;
+    int current_row = 1;
 
     char c;
     while ((c = fgetc(file)) != EOF){
@@ -1163,15 +1198,17 @@ int read_option(char *filename)
         switch (c) {
             case 'U':{}
             case 'S':{
-                if (!read_set(file, &set_list)){
+                if (!read_set(file, &set_list, current_row)){
                     err_flag = 1;
                 }
+                current_row++;
                 break;
             }
             case 'R':{
-                if (!read_relation(file)){
+                if (!read_relation(file, current_row)){
                     err_flag = 1;
                 }
+                current_row++;
                 break;
             }
             case 'C':{
