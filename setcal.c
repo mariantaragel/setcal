@@ -342,6 +342,15 @@ void print_relation(Relation relation)
     }
 }
 
+///  ======================================================================== ///
+
+/**
+ * Function find index of set on given row
+ *
+ * @param[in] set_list
+ * @param[in] row
+ * @return 0 - there isn't set on the row, 1 in other case
+ */
 int check_set_existence(Set_list* set_list, int* row)
 {
     for (int i = 0; i < set_list->size; ++i) {
@@ -353,8 +362,73 @@ int check_set_existence(Set_list* set_list, int* row)
     return 0;
 }
 
+///  ======================================================================== ///
+
+
+/**
+ * Function find index of relation on given row
+ *
+ * @param[in] rel_list
+ * @param[in] row
+ * @return 0 - there isn't relation on the row, 1 in other case
+ */
+int check_relation_existence(Relation_list* rel_list, int* row)
+{
+    for (int i = 0; i < rel_list->size; ++i) {
+        if (rel_list->relations[i].position == *row){
+            *row = i;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 ///  ======================================================================== ///
+
+/**
+ * Function find index of relation on given row
+ *
+ * @param[in] relation_list
+ * @param[in] row_number
+ * @return 0 - there isn't relation on the row, 1 in other case
+ */
+
+int domain(Relation_list* relation_list, int row_number)
+{
+    if ( !check_relation_existence(relation_list, &row_number) ){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size = relation_list->relations[row_number].number_of_pairs;
+
+    if (size == 0){
+        printf("S \n");
+        return 1;
+    }
+
+    Pair* pairs = relation_list->relations[row_number].pairs;
+    char* elements[size];
+    for (int i = 0; i < size; ++i) {
+        strcpy(elements[i], pairs[i].first);
+    }
+
+    qsort(elements, size, sizeof(char*), str_comparator);
+
+    printf("S");
+    for (int i = 0; i < size; ++i) {
+        while ( i < size - 1 && elements[i] == elements[i+1]){
+            i++;
+        }
+        printf(" %s", elements[i]);
+    }
+    printf("\n");
+
+    return 1;
+}
+
+///  ======================================================================== ///
+
 
 /**
  * Function prints complement of set
