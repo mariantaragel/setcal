@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 24.11.2021
+ * @date 25.11.2021
  */
 
 #include <stdio.h>
@@ -13,12 +13,14 @@
 typedef struct{
     char **elements;
     int cardinality;
+    int capacity;
     int position;
 } Set;
 
 typedef struct{
     Set* sets;
     int size;
+    int capacity;
 } Set_list;
 
 typedef struct{
@@ -30,11 +32,13 @@ typedef struct{
     Pair* pairs;
     int number_of_pairs;
     int position;
+    int capacity;
 } Relation;
 
 typedef struct{
     Relation* relations;
     int size;
+    int capacity;
 } Relation_list;
 
 ///  ======================================================================== ///
@@ -55,6 +59,7 @@ void set_ctor(Set *set)
 {
     set->elements = NULL;
     set->cardinality = 0;
+    set->capacity = 0;
     set->position = 0;
 }
 
@@ -72,12 +77,15 @@ void free_set(Set* set)
             free(set->elements[i]);
             set->elements[i] = NULL;
         }
+        set->elements[i] = NULL;
     }
     if (set->elements != NULL){
         free(set->elements);
         set->elements = NULL;
     }
+    set->elements = NULL;
     set->cardinality = 0;
+    set->capacity = 0;
     set->position = 0;
 }
 
@@ -130,6 +138,7 @@ void free_relation(Relation *relation)
 void set_list_ctor(Set_list* set_list)
 {
     set_list->sets = NULL;
+    set_list->capacity = 0;
     set_list->size = 0;
 }
 
@@ -150,6 +159,7 @@ void free_set_list(Set_list* set_list)
         set_list->sets = NULL;
     }
     set_list->size = 0;
+    set_list->capacity = 0;
 }
 
 ///  ======================================================================== ///
@@ -163,6 +173,7 @@ void relation_list_ctor(Relation_list *relation_list)
 {
     relation_list->relations = NULL;
     relation_list->size = 0;
+    relation_list->capacity = 0;
 }
 
 ///  ======================================================================== ///
@@ -189,6 +200,7 @@ void relation_ctor(Relation *relation)
 {
     relation->pairs = NULL;
     relation->number_of_pairs = 0;
+    relation->capacity = 0;
     relation->position = 0;
 }
 
@@ -200,6 +212,7 @@ void relation_ctor(Relation *relation)
  * @param[in] set
  * @param[in] elem
  * @param[in] elem_length
+ * @return 0 error, 1
  */
 int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
 {
@@ -212,14 +225,25 @@ int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
     }
 
     if (set->elements == NULL){
-        set->elements = (char**) malloc(sizeof(char*));
+        set->capacity = 10;
+        set->elements = (char**) malloc(sizeof(char*) * set->capacity);
         set->cardinality = 1;
         set->elements[0] = (char*) malloc(elem_length + 1);
     }
     else {
+        char** temp = NULL;
         set->cardinality++;
-        set->elements = (char**) realloc(set->elements, sizeof(char*) * set->cardinality);
 
+        if ( set->cardinality > set->capacity){
+            set->capacity *= 2;
+            temp = (char**) realloc(set->elements, sizeof(char*) * set->cardinality);
+            if (temp == NULL) {
+                free_set(set);
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
+            set->elements = temp;
+        }
         set->elements[set->cardinality - 1] = (char*) malloc(elem_length + 1);
     }
 
@@ -272,19 +296,30 @@ int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length
  * @param[in] set_list
  * @param[in] new_set - set, that will be added to list
  */
-void add_set_to_list(Set_list* set_list, Set* new_set)
+int add_set_to_list(Set_list* set_list, Set* new_set)
 {
 
     if (set_list->sets == NULL){
         set_list->size = 1;
-        set_list->sets = (Set*) malloc(sizeof(Set));
+        set_list->capacity = 10;
+        set_list->sets = (Set*) malloc(sizeof(Set) * set_list->capacity);
     }
     else {
+        Set* temp = NULL;
         set_list->size++;
-        set_list->sets = (Set*) realloc(set_list->sets, sizeof(Set) * set_list->size);
+        if ( set_list->size > set_list->capacity ){
+            set_list->capacity *=2;
+            temp = (Set*) realloc(set_list->sets, sizeof(Set) * set_list->capacity);
+            if (temp == NULL){
+                free_set_list(set_list);
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
+            set_list->sets = temp;
+        }
     }
-
     set_list->sets[set_list->size - 1] = *new_set;
+    return 1;
 }
 
 ///  ======================================================================== ///
