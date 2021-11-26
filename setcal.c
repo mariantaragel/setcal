@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 25.11.2021
+ * @date 26.11.2021
  */
 
 #include <stdio.h>
@@ -41,14 +41,14 @@ typedef struct{
     int capacity;
 } Relation_list;
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 int str_comparator(const void* s1, const void* s2)
 {
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Constructor for set
@@ -63,7 +63,7 @@ void set_ctor(Set *set)
     set->position = 0;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  *  Function free resources for set
@@ -89,7 +89,54 @@ void free_set(Set* set)
     set->position = 0;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
+
+/**
+ * Constructor for list of sets
+ *
+ * @param[in] set_list
+ */
+void set_list_ctor(Set_list* set_list)
+{
+    set_list->sets = NULL;
+    set_list->capacity = 0;
+    set_list->size = 0;
+}
+
+/// ======================================================================== ///
+
+/**
+ *  Function free resources for list of sets
+ *
+ * @param[in] set_list
+ */
+void free_set_list(Set_list* set_list)
+{
+    for (int i = 0; i < set_list->size; ++i) {
+        free_set(&set_list->sets[i]);
+    }
+    if (set_list->sets != NULL) {
+        free(set_list->sets);
+        set_list->sets = NULL;
+    }
+    set_list->size = 0;
+    set_list->capacity = 0;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Constructor for pair
+ *
+ * @param[in] pair
+ */
+void pair_ctor(Pair *pair)
+{
+    pair->first = NULL;
+    pair->second = NULL;
+}
+
+/// ======================================================================== ///
 
 /**
  *  Function free resources for pair
@@ -106,7 +153,22 @@ void free_pair(Pair *pair)
     }
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
+
+/**
+ * Constructor for relation
+ *
+ * @param[in] relation
+ */
+void relation_ctor(Relation *relation)
+{
+    relation->pairs = NULL;
+    relation->number_of_pairs = 0;
+    relation->capacity = 0;
+    relation->position = 0;
+}
+
+/// ======================================================================== ///
 
 /**
  *  Function free resources for relation
@@ -128,41 +190,7 @@ void free_relation(Relation *relation)
     relation->position = 0;
 }
 
-///  ======================================================================== ///
-
-/**
- * Constructor for list of sets
- *
- * @param[in] set_list
- */
-void set_list_ctor(Set_list* set_list)
-{
-    set_list->sets = NULL;
-    set_list->capacity = 0;
-    set_list->size = 0;
-}
-
-///  ======================================================================== ///
-
-/**
- *  Function free resources for list of sets
- *
- * @param[in] set_list
- */
-void free_set_list(Set_list* set_list)
-{
-    for (int i = 0; i < set_list->size; ++i) {
-        free_set(&set_list->sets[i]);
-    }
-    if (set_list->sets != NULL) {
-        free(set_list->sets);
-        set_list->sets = NULL;
-    }
-    set_list->size = 0;
-    set_list->capacity = 0;
-}
-
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Constructor for list of pairs
@@ -176,35 +204,29 @@ void relation_list_ctor(Relation_list *relation_list)
     relation_list->capacity = 0;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
- * Constructor for pair
+ *  Function free resources for relation_list
  *
- * @param[in] pair
+ * @param[in] relation_list
  */
-void pair_ctor(Pair *pair)
+void free_relation_list(Relation_list *relation_list)
 {
-    pair->first = NULL;
-    pair->second = NULL;
+    for (int i = 0; i < relation_list->size; i++){
+        free_relation(&relation_list->relations[i]);
+    }
+
+    if (relation_list->relations != NULL){
+        free(relation_list->relations);
+        relation_list->relations = NULL;
+    }
+
+    relation_list->size = 0;
+    relation_list->capacity = 0;
 }
 
-///  ======================================================================== ///
-
-/**
- * Constructor for relation
- *
- * @param[in] relation
- */
-void relation_ctor(Relation *relation)
-{
-    relation->pairs = NULL;
-    relation->number_of_pairs = 0;
-    relation->capacity = 0;
-    relation->position = 0;
-}
-
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  *  Function to add element to set
@@ -216,7 +238,6 @@ void relation_ctor(Relation *relation)
  */
 int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
 {
-
     for (int i = 0; i < set->cardinality; i++){
         if (strcmp(set->elements[i], elem) == 0){
             fprintf(stderr, "Element was already stored!\n");
@@ -254,7 +275,40 @@ int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
+
+/**
+ *  Function add set to list
+ *
+ * @param[in] set_list
+ * @param[in] new_set set, that will be added to list
+ */
+int add_set_to_list(Set_list* set_list, Set* new_set)
+{
+    if (set_list->sets == NULL){
+        set_list->size = 1;
+        set_list->capacity = 10;
+        set_list->sets = (Set*) malloc(sizeof(Set) * set_list->capacity);
+    }
+    else {
+        Set* temp = NULL;
+        set_list->size++;
+        if ( set_list->size > set_list->capacity ){
+            set_list->capacity *=2;
+            temp = (Set*) realloc(set_list->sets, sizeof(Set) * set_list->capacity);
+            if (temp == NULL){
+                free_set_list(set_list);
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
+            set_list->sets = temp;
+        }
+    }
+    set_list->sets[set_list->size - 1] = *new_set;
+    return 1;
+}
+
+/// ======================================================================== ///
 
 /**
  *  Function to add element to set
@@ -288,75 +342,109 @@ int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
- *  Function add set to list
+ * Function add pair to relation
  *
- * @param[in] set_list
- * @param[in] new_set - set, that will be added to list
- */
-int add_set_to_list(Set_list* set_list, Set* new_set)
-{
-
-    if (set_list->sets == NULL){
-        set_list->size = 1;
-        set_list->capacity = 10;
-        set_list->sets = (Set*) malloc(sizeof(Set) * set_list->capacity);
-    }
-    else {
-        Set* temp = NULL;
-        set_list->size++;
-        if ( set_list->size > set_list->capacity ){
-            set_list->capacity *=2;
-            temp = (Set*) realloc(set_list->sets, sizeof(Set) * set_list->capacity);
-            if (temp == NULL){
-                free_set_list(set_list);
-                fprintf(stderr, "Not enough memory!\n");
-                return 0;
-            }
-            set_list->sets = temp;
-        }
-    }
-    set_list->sets[set_list->size - 1] = *new_set;
-    return 1;
-}
-
-///  ======================================================================== ///
-
-/**
- *  Function add pair to relation
- *
- * @param[in] set_list
- * @param[in] new_set - set, that will be added to list
+ * @param[in] relation
+ * @param[in] pair
+ * @param[in] current_row
  */
 int add_pair_to_relation(Relation *relation, Pair *pair, int current_row)
 {
-    if (relation->pairs == NULL){
-        relation->number_of_pairs = 1;
-        relation->pairs = (Pair *) malloc(sizeof(Pair));
+    if (relation->capacity == relation->number_of_pairs){
         if (relation->pairs == NULL){
-            fprintf(stderr, "Not enough memory!\n");
-            return 0;
+            relation->capacity = 10;
+            relation->pairs = (Pair *) malloc(sizeof(Pair) * relation->capacity);
+            if (relation->pairs == NULL){
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
         }
-        relation->number_of_pairs = 1;
-    }
-    else {
-        relation->number_of_pairs++;
-        relation->pairs = (Pair *) realloc(relation->pairs, sizeof(Pair) * relation->number_of_pairs);
-        if (relation->pairs == NULL){
-            fprintf(stderr, "Not enough memory!\n");
-            return 0;
+        else {
+            relation->capacity += 5;
+            Pair *pointer;
+            pointer = (Pair *) realloc(relation->pairs, sizeof(Pair) * relation->number_of_pairs);
+            if (pointer == NULL){
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
+            relation->pairs = pointer;
         }
     }
 
+    relation->number_of_pairs++;
     relation->pairs[relation->number_of_pairs - 1] = *pair;
     relation->position = current_row;
 
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
+
+/**
+ * Function add relation to list of relations
+ * 
+ * @param[in] relation_list
+ * @param[in] relation relation, that will be added to list
+ */
+int add_relation_to_list(Relation_list *relation_list, Relation *relation)
+{
+    if (relation_list->capacity == relation_list->size){
+        if (relation_list->relations == NULL){
+            relation_list->capacity = 10;
+            relation_list->relations = (Relation *) malloc(sizeof(Relation) * relation_list->capacity);
+            if (relation_list->relations == NULL){
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
+        }
+        else {
+            relation_list->capacity += 5;
+            Relation *pointer;
+            pointer = (Relation *) realloc(relation_list->relations, sizeof(Relation) * relation_list->capacity);
+            if (pointer == NULL){
+                fprintf(stderr, "Not enough memory!\n");
+                return 0;
+            }
+            relation_list->relations = pointer;
+        }
+    }
+    relation_list->size++;
+    relation_list->relations[relation_list->size - 1] = *relation;
+
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Function print set on stdout
+ *
+ * @param[in] set set to print
+ */
+void print_set(Set_list *set_list, Set set)
+{
+    if (set_list->size == 1){
+        printf("U");
+    }
+    else {
+        printf("S");
+    }
+
+    if (set.cardinality == 0){
+        printf("\n");
+    }
+    else {
+        for (int i = 0; i < set.cardinality; i++){
+            printf(" %s", set.elements[i]);
+        }
+        printf("\n");
+    }
+}
+
+/// ======================================================================== ///
 
 /**
  * Function print relation on stdout
@@ -377,7 +465,7 @@ void print_relation(Relation relation)
     }
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function find index of set on given row
@@ -388,7 +476,7 @@ void print_relation(Relation relation)
  */
 int check_set_existence(Set_list* set_list, int* row)
 {
-    for (int i = 0; i < set_list->size; ++i) {
+    for (int i = 0; i < set_list->size; i++) {
         if (set_list->sets[i].position == *row){
             *row = i;
             return 1;
@@ -397,8 +485,7 @@ int check_set_existence(Set_list* set_list, int* row)
     return 0;
 }
 
-///  ======================================================================== ///
-
+/// ======================================================================== ///
 
 /**
  * Function find index of relation on given row
@@ -418,7 +505,7 @@ int check_relation_existence(Relation_list* rel_list, int* row)
     return 0;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function find index of relation on given row
@@ -462,8 +549,7 @@ int domain(Relation_list* relation_list, int row_number)
     return 1;
 }
 
-///  ======================================================================== ///
-
+/// ======================================================================== ///
 
 /**
  * Function prints complement of set
@@ -503,7 +589,7 @@ int set_complement(Set_list* set_list, int set_number)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function print number of elements in set
@@ -524,34 +610,7 @@ int set_card(Set_list *set_list, int set_number)
     return 1;
 }
 
-///  ======================================================================== ///
-
-/**
- * Function print set on stdout
- *
- * @param[in] set set to print
- */
-void print_set(Set_list *set_list, Set set)
-{
-    if (set_list->size == 1){
-        printf("U");
-    }
-    else {
-        printf("S");
-    }
-
-    if (set.cardinality == 0){
-        printf("\n");
-    }
-    else {
-        for (int i = 0; i < set.cardinality; i++){
-            printf(" %s", set.elements[i]);
-        }
-        printf("\n");
-    }
-}
-
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function print union of sets
@@ -597,7 +656,7 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function prints minus of 2 sets
@@ -649,7 +708,7 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 }
 
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function prints:
@@ -704,7 +763,7 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function prints:
@@ -763,7 +822,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function prints:
@@ -791,7 +850,7 @@ int is_set_empty(Set_list *set_list, int set_number)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
 * Prints true - equal, false - not equal
@@ -802,7 +861,7 @@ int is_set_empty(Set_list *set_list, int set_number)
 */
 int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if (   !check_set_existence(set_list, &set_number_1)
+    if (!check_set_existence(set_list, &set_number_1)
            || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
@@ -840,7 +899,7 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
 * Function prints intersect of 2 sets
@@ -886,7 +945,7 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  * Function to check syntax of element
@@ -933,7 +992,7 @@ int check_element_syntax(char *element, Set_list* set_list)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  *  Function parses options given in file
@@ -1090,7 +1149,7 @@ int read_command(FILE *file, Set_list *set_list)
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  *  Function parses options given in file
@@ -1099,7 +1158,7 @@ int read_command(FILE *file, Set_list *set_list)
  * @param[in] rel_list
  * @return 0 in case of error, 1 in other case
  */
-int read_relation(FILE *file, int current_row)
+int read_relation(FILE *file, Relation_list *relation_list, int current_row)
 {
     char c = fgetc(file);
     if (c != ' ' && c != '\n'){
@@ -1163,22 +1222,18 @@ int read_relation(FILE *file, int current_row)
             return 0;
         }
     }
-
-    print_relation(new_relation);
-
-    free_relation(&new_relation);
-
-    /*
+    
     if (!(add_relation_to_list(relation_list, &new_relation))){
         free_relation(&new_relation);
         return 0;
     }
-    */
 
+    print_relation(new_relation);
+    
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  *  Function parses options given in file
@@ -1268,7 +1323,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
 }
 
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 /**
  *  Function parses options given in file
@@ -1314,7 +1369,7 @@ int read_option(char *filename)
                 break;
             }
             case 'R':{
-                if (!read_relation(file, current_row)){
+                if (!read_relation(file, &relation_list, current_row)){
                     err_flag = 1;
                 }
                 current_row++;
@@ -1331,16 +1386,16 @@ int read_option(char *filename)
                 err_flag = 1;
             }
         }
-
     }
 
     free_set_list(&set_list);
+    free_relation_list(&relation_list);
     fclose(file);
 
     return 1;
 }
 
-///  ======================================================================== ///
+/// ======================================================================== ///
 
 int main(int argc, char **argv)
 {
