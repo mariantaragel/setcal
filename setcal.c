@@ -55,12 +55,12 @@ int str_comparator(const void* s1, const void* s2)
  *
  * @param[in] set
  */
-void set_ctor(Set *set)
+void set_ctor(Set *set, int current_row)
 {
     set->elements = NULL;
     set->cardinality = 0;
     set->capacity = 0;
-    set->position = 0;
+    set->position = current_row;
 }
 
 /// ======================================================================== ///
@@ -160,12 +160,12 @@ void free_pair(Pair *pair)
  *
  * @param[in] relation
  */
-void relation_ctor(Relation *relation)
+void relation_ctor(Relation *relation, int current_row)
 {
     relation->pairs = NULL;
     relation->number_of_pairs = 0;
     relation->capacity = 0;
-    relation->position = 0;
+    relation->position = current_row;
 }
 
 /// ======================================================================== ///
@@ -236,7 +236,7 @@ void free_relation_list(Relation_list *relation_list)
  * @param[in] elem_length
  * @return 0 error, 1
  */
-int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
+int add_element_to_set(Set *set, char* elem, int elem_length)
 {
     for (int i = 0; i < set->cardinality; i++){
         if (strcmp(set->elements[i], elem) == 0){
@@ -269,8 +269,6 @@ int add_element_to_set(Set *set, char* elem, int elem_length, int current_row)
     }
 
     memcpy(set->elements[set->cardinality - 1], elem, elem_length + 1);
-
-    set->position = current_row;
 
     return 1;
 }
@@ -349,9 +347,8 @@ int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length
  *
  * @param[in] relation
  * @param[in] pair
- * @param[in] current_row
  */
-int add_pair_to_relation(Relation *relation, Pair *pair, int current_row)
+int add_pair_to_relation(Relation *relation, Pair *pair)
 {
     if (relation->capacity == relation->number_of_pairs){
         if (relation->pairs == NULL){
@@ -376,7 +373,6 @@ int add_pair_to_relation(Relation *relation, Pair *pair, int current_row)
 
     relation->number_of_pairs++;
     relation->pairs[relation->number_of_pairs - 1] = *pair;
-    relation->position = current_row;
 
     return 1;
 }
@@ -454,7 +450,7 @@ void print_set(Set_list *set_list, Set set)
 void print_relation(Relation relation)
 {
     if (relation.number_of_pairs == 0){
-        printf("\n");
+        printf("R\n");
     }
     else {
         printf("R");
@@ -525,21 +521,21 @@ int domain(Relation_list* relation_list, int row_number)
     int size = relation_list->relations[row_number].number_of_pairs;
 
     if (size == 0){
-        printf("S \n");
+        printf("S\n");
         return 1;
     }
 
-    Pair* pairs = relation_list->relations[row_number].pairs;
-    char* elements[size];
-    for (int i = 0; i < size; ++i) {
-        strcpy(elements[i], pairs[i].first);
+    Pair *pairs = relation_list->relations[row_number].pairs;
+    char *elements[size];
+    for (int i = 0; i < size; i++){
+        elements[i] = pairs[i].first;
     }
 
     qsort(elements, size, sizeof(char*), str_comparator);
 
     printf("S");
     for (int i = 0; i < size; ++i) {
-        while ( i < size - 1 && elements[i] == elements[i+1]){
+        while (elements[i] == elements[i + 1]){
             i++;
         }
         printf(" %s", elements[i]);
@@ -916,14 +912,6 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
         return 0;
     }
 
-
-    for (int i = 0; i < set_list->size; ++i) {
-        if (set_list->sets[i].position == set_number_1){
-            set_number_1 = i;
-        }
-    }
-
-
     char** first_set = set_list->sets[set_number_1].elements;
     int first_set_size = set_list->sets[set_number_1].cardinality;
 
@@ -1001,7 +989,7 @@ int check_element_syntax(char *element, Set_list* set_list)
  * @param set_list
  * @return 0 - command was wrong, 1 in other case
  */
-int read_command(FILE *file, Set_list *set_list)
+int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
 {
     char *command[] = {"empty", "card", "complement", "union",
                        "intersect", "minus", "subseteq", "subset", "equals",
@@ -1141,6 +1129,12 @@ int read_command(FILE *file, Set_list *set_list)
             }
             break;
         }
+        case 14:{
+            if (!domain(relation_list, set_number_1)){
+                return 0;
+            }
+            break;
+        }
         default:{
             fprintf(stderr, "Command %s doesn't exist\n", loaded_command);
             return 0;
@@ -1167,10 +1161,11 @@ int read_relation(FILE *file, Relation_list *relation_list, int current_row)
     }
 
     Relation new_relation;
-    relation_ctor(&new_relation);
+    relation_ctor(&new_relation, current_row);
 
     if (c == '\n'){
-        //add_relation_to_list(relation_list, &new_relation);
+        add_relation_to_list(relation_list, &new_relation);
+        print_relation(new_relation);
         return 1;
     }
 
@@ -1217,7 +1212,7 @@ int read_relation(FILE *file, Relation_list *relation_list, int current_row)
             free_pair(&new_pair);
             return 0;
         }
-        if (!(add_pair_to_relation(&new_relation, &new_pair, current_row))){
+        if (!(add_pair_to_relation(&new_relation, &new_pair))){
             free_relation(&new_relation);
             return 0;
         }
@@ -1250,7 +1245,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
     int last_elem_idx;
 
     Set new_set;
-    set_ctor(&new_set);
+    set_ctor(&new_set, current_row);
 
     if (c != ' ' && c != '\n'){
         fprintf(stderr, "Wrong syntax of input file!\n");
@@ -1285,13 +1280,13 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
                 free_set(&new_set);
                 return 0;
             }
-            if (!(add_element_to_set(&new_set, element, last_elem_idx, current_row))){
+            if (!(add_element_to_set(&new_set, element, last_elem_idx))){
                 free_set(&new_set);
                 return 0;
             }
         }
 
-        if (elem_idx > 30){
+        if (elem_idx >= 30){
             fprintf(stderr, "Wrong set element!\n");
             free_set(&new_set);
             return 0;
@@ -1308,7 +1303,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
         free_set(&new_set);
         return 0;
     }
-    if (!(add_element_to_set(&new_set, element, last_elem_idx, current_row))){
+    if (!(add_element_to_set(&new_set, element, last_elem_idx))){
         free_set(&new_set);
         return 0;
     }
@@ -1346,14 +1341,10 @@ int read_option(char *filename)
     Relation_list relation_list;
     relation_list_ctor(&relation_list);
 
-    int err_flag = 0;
     int current_row = 1;
 
     char c;
     while ((c = fgetc(file)) != EOF){
-
-        if (err_flag)
-            break;
 
         if (isblank(c)){
             continue;
@@ -1363,27 +1354,27 @@ int read_option(char *filename)
             case 'U':{}
             case 'S':{
                 if (!read_set(file, &set_list, current_row)){
-                    err_flag = 1;
+                    return 0;
                 }
                 current_row++;
                 break;
             }
             case 'R':{
                 if (!read_relation(file, &relation_list, current_row)){
-                    err_flag = 1;
+                    return 0;
                 }
                 current_row++;
                 break;
             }
             case 'C':{
-                if (!read_command(file, &set_list)){
-                    err_flag = 1;
+                if (!read_command(file, &set_list, &relation_list)){
+                    return 0;
                 }
                 break;
             }
             default:{
                 fprintf(stderr, "Bad option.\n");
-                err_flag = 1;
+                return 0;
             }
         }
     }
