@@ -698,6 +698,90 @@ int is_transitive(Relation_list *relation_list, int row_number)
 /// ======================================================================== ///
 
 /**
+ * Function prints:
+ * true - relation is bijective
+ * false - in other case
+ *
+ * @param[in] relation_list
+ * @param[in] set_list
+ * @param[in] relation_number
+ * @param[in] set_number_1
+ * @param[in] set_number_2
+ * @return 0 - error, 1 - given arg numbers are valid
+ */
+int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
+{
+    if (!check_relation_existence(relation_list, &relation_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size_of_relation = relation_list->relations[relation_number].number_of_pairs;
+    int size_of_set_1 = set_list->sets[set_number_1].cardinality;
+    int size_of_set_2 = set_list->sets[set_number_2].cardinality;
+
+    if (size_of_set_1 != size_of_set_2){
+        printf("false\n");
+        return 1;
+    }
+    if (size_of_relation != size_of_set_1){
+        printf("false\n");
+        return 1;
+    }
+
+    if (!size_of_relation && !size_of_set_1 && !size_of_set_2){
+        printf("true\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[relation_number].pairs;
+    char *domain_of_relation[size_of_relation];
+    char *codomain_of_relation[size_of_relation];
+
+    for (int i = 0; i < size_of_relation; i++){
+        domain_of_relation[i] = pairs[i].first;
+        codomain_of_relation[i] = pairs[i].second;
+    }
+    
+    qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+    qsort(codomain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+
+    int match = 0;
+    for (int i = 0; i < size_of_relation; i++){
+        while ((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)){
+            match = 1;
+            break;
+        }
+        if (match){
+            printf("false\n");
+            break;
+        }
+
+        while ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0)){
+            match = 1;
+            break;
+        }
+        if (match){
+            printf("false\n");
+            break;
+        }
+    }
+    if (!match){
+        printf("true\n");
+    }
+    
+
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
  * Function prints complement of set
  *
  * @param[in] set_number
@@ -1175,15 +1259,17 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
     }
     loaded_command[index] = '\0';
 
-    int set_number_1 = 0;
-    int set_number_2 = 0;
-    fscanf(file, "%d", &set_number_1);
-    if (!set_number_1){
+    int arg_1 = 0;
+    int arg_2 = 0;
+    int arg_3 = 0;
+    fscanf(file, "%d", &arg_1);
+    if (!arg_1){
         fprintf(stderr, "Too few arguments!\n");
         return 0;
     }
-    fscanf(file, "%d", &set_number_2);
-    if (set_number_2){
+    fscanf(file, "%d", &arg_2);
+    fscanf(file, "%d", &arg_3);
+    if (arg_3){
         while (isblank(c)){
             c = fgetc(file);
         }
@@ -1202,103 +1288,165 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
     }
     switch (i){
         case 0:{
-            if (!is_set_empty(set_list, set_number_1)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_set_empty(set_list, arg_1)){
                 return 0;
             }
             break;
         }
         case 1:{
-            if (!set_card(set_list, set_number_1)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!set_card(set_list, arg_1)){
                 return 0;
             }
             break;
         }
         case 2:{
-            if (!set_complement(set_list, set_number_1)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!set_complement(set_list, arg_1)){
                 return 0;
             }
             break;
         }
         case 3:{
-            if (!set_number_2){
+            if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!union_of_sets(set_list, set_number_1, set_number_2)){
+            if (arg_3){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!union_of_sets(set_list, arg_1, arg_2)){
                 return 0;
             }
             break;
         }
         case 4:{
-            if (!set_number_2){
+            if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!intersect_of_sets(set_list, set_number_1, set_number_2)){
+            if (arg_3){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!intersect_of_sets(set_list, arg_1, arg_2)){
                 return 0;
             }
             break;
         }
         case 5:{
-            if (!set_number_2){
+            if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!minus_of_sets(set_list, set_number_1, set_number_2)){
+            if (arg_3){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!minus_of_sets(set_list, arg_1, arg_2)){
                 return 0;
             }
             break;
         }
         case 6:{
-            if (!set_number_2){
+            if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!is_subseteq(set_list, set_number_1, set_number_2)){
+            if (arg_3){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_subseteq(set_list, arg_1, arg_2)){
                 return 0;
             }
             break;
         }
         case 7:{
-            if (!set_number_2){
+            if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!is_subset(set_list, set_number_1, set_number_2)){
+            if (arg_3){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_subset(set_list, arg_1, arg_2)){
                 return 0;
             }
             break;
         }
         case 8:{
-            if (!set_number_2){
+            if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!are_sets_equal(set_list, set_number_1, set_number_2)){
+            if (arg_3){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!are_sets_equal(set_list, arg_1, arg_2)){
                 return 0;
             }
             break;
         }
         case 10:{
-            if (!is_symmetric(relation_list, set_number_1)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_symmetric(relation_list, arg_1)){
                 return 0;
             }
             break;
         }
         case 12:{
-            if (!is_transitive(relation_list, set_number_1)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_transitive(relation_list, arg_1)){
                 return 0;
             }
             break;
         }
         case 14:{
-            if (!domain_or_codomain(relation_list, set_number_1, 0)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!domain_or_codomain(relation_list, arg_1, 0)){
                 return 0;
             }
             break;
         }
         case 15:{
-            if (!domain_or_codomain(relation_list, set_number_1, 1)){
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!domain_or_codomain(relation_list, arg_1, 1)){
+                return 0;
+            }
+            break;
+        }
+        case 18:{
+            if (!arg_2 || !arg_3){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!is_bijective(relation_list, set_list, arg_1, arg_2, arg_3)){
                 return 0;
             }
             break;
