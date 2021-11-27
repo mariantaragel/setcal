@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 26.11.2021
+ * @date 27.11.2021
  */
 
 #include <stdio.h>
@@ -381,7 +381,7 @@ int add_pair_to_relation(Relation *relation, Pair *pair)
 
 /**
  * Function add relation to list of relations
- * 
+ *
  * @param[in] relation_list
  * @param[in] relation relation, that will be added to list
  */
@@ -556,7 +556,7 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
 
 /**
  * Function compares two pairs in relation
- * 
+ *
  * @param[in] pair_1
  * @param[in] pair_2
  * @return 1 - pairs are identical, 0 - in other case
@@ -568,14 +568,14 @@ int compare_pairs(Pair pair_1, Pair pair_2)
     if (match_1 || match_2){
         return 0;
     }
-    
+
     return 1;
 }
 
 /// ======================================================================== ///
 /**
  * Function find pair in array of pairs
- * 
+ *
  * @param[in] pairs
  * @param[in] pair
  * @param[in] size
@@ -598,7 +598,7 @@ int find_pair(Pair *pairs, Pair pair, int size)
  * Function prints:
  * true - relation is symmetric
  * false - in other case
- * 
+ *
  * @param[in] relation_list
  * @param[in] row_number
  * @return 0 - there isn't relation on the row, 1 in other case
@@ -624,14 +624,14 @@ int is_symmetric(Relation_list *relation_list, int row_number)
         Pair reverse_pair;
         reverse_pair.first = pairs[i].second;
         reverse_pair.second = pairs[i].first;
-        
+
         match = find_pair(pairs, reverse_pair, size);
 
         if (!match){
             printf("false\n");
             break;
         }
-        
+
         if(i + 1 == size){
             printf("true\n");
             break;
@@ -645,14 +645,14 @@ int is_symmetric(Relation_list *relation_list, int row_number)
 
 /**
  * Function prints:
- * true - relation is transitive
+ * true - relation is antisymmetric
  * false - in other case
- * 
+ *
  * @param[in] relation_list
  * @param[in] row_number
  * @return 0 - there isn't relation on the row, 1 in other case
  */
-int is_transitive(Relation_list *relation_list, int row_number)
+int is_antisymmetric(Relation_list *relation_list, int row_number)
 {
     if (!check_relation_existence(relation_list, &row_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
@@ -667,31 +667,25 @@ int is_transitive(Relation_list *relation_list, int row_number)
     }
 
     Pair *pairs = relation_list->relations[row_number].pairs;
-
-    int match = 1;
+    int match;
     for (int i = 0; i < size; i++){
-        for (int j = 0; j < size; j++){
-            if (strcmp(pairs[i].second, pairs[j].first) == 0){
-                Pair pair;
-                pair.first = pairs[i].first;
-                pair.second = pairs[j].second;
+        match = 0;
+        Pair reverse_pair;
+        reverse_pair.first = pairs[i].second;
+        reverse_pair.second = pairs[i].first;
 
-                if (!(find_pair(pairs, pair, size))){
-                    match = 0;
-                    break;
-                }
+        /// Find symmetric relation, if pair elems aren't reflexive
+        if ( strcmp(reverse_pair.first, reverse_pair.second) != 0){
+            match = find_pair(pairs, reverse_pair, size);
+
+            if (match){
+                printf("false\n");
+                return 1;
             }
-        }
-        if (!match){
-            printf("false\n");
-            break;
-        }
-        else if (i + 1 == size){
-            printf("true\n");
-            break;
         }
     }
 
+    printf("true\n");
     return 1;
 }
 
@@ -775,6 +769,60 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
         printf("true\n");
     }
     
+
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Function prints:
+ * true - relation is transitive
+ * false - in other case
+ *
+ * @param[in] relation_list
+ * @param[in] row_number
+ * @return 0 - there isn't relation on the row, 1 in other case
+ */
+int is_transitive(Relation_list *relation_list, int row_number)
+{
+    if (!check_relation_existence(relation_list, &row_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size = relation_list->relations[row_number].number_of_pairs;
+
+    if (size == 0){
+        printf("true\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[row_number].pairs;
+
+    int match = 1;
+    for (int i = 0; i < size; i++){
+        for (int j = 0; j < size; j++){
+            if (strcmp(pairs[i].second, pairs[j].first) == 0){
+                Pair pair;
+                pair.first = pairs[i].first;
+                pair.second = pairs[j].second;
+
+                if (!(find_pair(pairs, pair, size))){
+                    match = 0;
+                    break;
+                }
+            }
+        }
+        if (!match){
+            printf("false\n");
+            break;
+        }
+        else if (i + 1 == size){
+            printf("true\n");
+            break;
+        }
+    }
 
     return 1;
 }
@@ -1092,7 +1140,7 @@ int is_set_empty(Set_list *set_list, int set_number)
 int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 {
     if (!check_set_existence(set_list, &set_number_1)
-           || !check_set_existence(set_list, &set_number_2)){
+        || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1411,6 +1459,16 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
+        case 11:{
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_antisymmetric(relation_list, arg_1)){
+                return 0;
+            }
+            break;
+        }
         case 12:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
@@ -1533,14 +1591,14 @@ int read_relation(FILE *file, Relation_list *relation_list, int current_row)
             return 0;
         }
     }
-    
+
     if (!(add_relation_to_list(relation_list, &new_relation))){
         free_relation(&new_relation);
         return 0;
     }
 
     print_relation(new_relation);
-    
+
     return 1;
 }
 
