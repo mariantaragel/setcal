@@ -504,15 +504,16 @@ int check_relation_existence(Relation_list* rel_list, int* row)
 /// ======================================================================== ///
 
 /**
- * Function find index of relation on given row
+ * Function find domain or codomain of relation
  *
  * @param[in] relation_list
  * @param[in] row_number
+ * @param[in] codomain_on 0 - find domain, 1 - find codomain
  * @return 0 - there isn't relation on the row, 1 in other case
  */
-int domain(Relation_list* relation_list, int row_number)
+int domain_or_codomain(Relation_list* relation_list, int row_number, int codomain_on)
 {
-    if ( !check_relation_existence(relation_list, &row_number) ){
+    if (!check_relation_existence(relation_list, &row_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -526,8 +527,15 @@ int domain(Relation_list* relation_list, int row_number)
 
     Pair *pairs = relation_list->relations[row_number].pairs;
     char *elements[size];
-    for (int i = 0; i < size; i++){
-        elements[i] = pairs[i].first;
+    if (codomain_on){
+        for (int i = 0; i < size; i++){
+            elements[i] = pairs[i].second;
+        }
+    }
+    else {
+        for (int i = 0; i < size; i++){
+            elements[i] = pairs[i].first;
+        }
     }
 
     qsort(elements, size, sizeof(char*), str_comparator);
@@ -1284,7 +1292,13 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             break;
         }
         case 14:{
-            if (!domain(relation_list, set_number_1)){
+            if (!domain_or_codomain(relation_list, set_number_1, 0)){
+                return 0;
+            }
+            break;
+        }
+        case 15:{
+            if (!domain_or_codomain(relation_list, set_number_1, 1)){
                 return 0;
             }
             break;
