@@ -545,6 +545,7 @@ int domain(Relation_list* relation_list, int row_number)
 }
 
 /// ======================================================================== ///
+
 /**
  * Function compares two pairs in relation
  * 
@@ -561,6 +562,26 @@ int compare_pairs(Pair pair_1, Pair pair_2)
     }
     
     return 1;
+}
+
+/// ======================================================================== ///
+/**
+ * Function find pair in array of pairs
+ * 
+ * @param[in] pairs
+ * @param[in] pair
+ * @param[in] size
+ * @return 1 - pair found, 0 - in other case
+ */
+int find_pair(Pair *pairs, Pair pair, int size)
+{
+    for (int i = 0; i < size; i++){
+        if (compare_pairs(pairs[i], pair)){
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 /// ======================================================================== ///
@@ -596,12 +617,7 @@ int is_symmetric(Relation_list *relation_list, int row_number)
         reverse_pair.first = pairs[i].second;
         reverse_pair.second = pairs[i].first;
         
-        for (int j = 0; j < size; j++){
-            if (compare_pairs(reverse_pair, pairs[j])){
-                match = 1;
-                break;
-            }
-        }
+        match = find_pair(pairs, reverse_pair, size);
 
         if (!match){
             printf("false\n");
@@ -609,6 +625,60 @@ int is_symmetric(Relation_list *relation_list, int row_number)
         }
         
         if(i + 1 == size){
+            printf("true\n");
+            break;
+        }
+    }
+
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Function prints:
+ * true - relation is transitive
+ * false - in other case
+ * 
+ * @param[in] relation_list
+ * @param[in] row_number
+ * @return 0 - there isn't relation on the row, 1 in other case
+ */
+int is_transitive(Relation_list *relation_list, int row_number)
+{
+    if (!check_relation_existence(relation_list, &row_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size = relation_list->relations[row_number].number_of_pairs;
+
+    if (size == 0){
+        printf("true\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[row_number].pairs;
+
+    int match = 1;
+    for (int i = 0; i < size; i++){
+        for (int j = 0; j < size; j++){
+            if (strcmp(pairs[i].second, pairs[j].first) == 0){
+                Pair pair;
+                pair.first = pairs[i].first;
+                pair.second = pairs[j].second;
+
+                if (!(find_pair(pairs, pair, size))){
+                    match = 0;
+                    break;
+                }
+            }
+        }
+        if (!match){
+            printf("false\n");
+            break;
+        }
+        else if (i + 1 == size){
             printf("true\n");
             break;
         }
@@ -1203,6 +1273,12 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
         }
         case 10:{
             if (!is_symmetric(relation_list, set_number_1)){
+                return 0;
+            }
+            break;
+        }
+        case 12:{
+            if (!is_transitive(relation_list, set_number_1)){
                 return 0;
             }
             break;
