@@ -510,7 +510,6 @@ int check_relation_existence(Relation_list* rel_list, int* row)
  * @param[in] row_number
  * @return 0 - there isn't relation on the row, 1 in other case
  */
-
 int domain(Relation_list* relation_list, int row_number)
 {
     if ( !check_relation_existence(relation_list, &row_number) ){
@@ -535,7 +534,7 @@ int domain(Relation_list* relation_list, int row_number)
 
     printf("S");
     for (int i = 0; i < size; ++i) {
-        while (elements[i] == elements[i + 1]){
+        while ((i < size - 1) && (strcmp(elements[i], elements[i + 1]) == 0)){
             i++;
         }
         printf(" %s", elements[i]);
@@ -546,13 +545,86 @@ int domain(Relation_list* relation_list, int row_number)
 }
 
 /// ======================================================================== ///
+/**
+ * Function compares two pairs in relation
+ * 
+ * @param[in] pair_1
+ * @param[in] pair_2
+ * @return 1 - pairs are identical, 0 - in other case
+ */
+int compare_pairs(Pair pair_1, Pair pair_2)
+{
+    int match_1 = strcmp(pair_1.first, pair_2.first);
+    int match_2 = strcmp(pair_1.second, pair_2.second);
+    if (match_1 || match_2){
+        return 0;
+    }
+    
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Function prints:
+ * true - relation is symmetric
+ * false - in other case
+ * 
+ * @param[in] relation_list
+ * @param[in] row_number
+ * @return 0 - there isn't relation on the row, 1 in other case
+ */
+int is_symmetric(Relation_list *relation_list, int row_number)
+{
+    if (!check_relation_existence(relation_list, &row_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size = relation_list->relations[row_number].number_of_pairs;
+
+    if (size == 0){
+        printf("true\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[row_number].pairs;
+    int match;
+    for (int i = 0; i < size; i++){
+        match = 0;
+        Pair reverse_pair;
+        reverse_pair.first = pairs[i].second;
+        reverse_pair.second = pairs[i].first;
+        
+        for (int j = 0; j < size; j++){
+            if (compare_pairs(reverse_pair, pairs[j])){
+                match = 1;
+                break;
+            }
+        }
+
+        if (!match){
+            printf("false\n");
+            break;
+        }
+        
+        if(i + 1 == size){
+            printf("true\n");
+            break;
+        }
+    }
+
+    return 1;
+}
+
+/// ======================================================================== ///
 
 /**
  * Function prints complement of set
  *
- * @param set_number
- * @param set_list
- * @return 0 error, 1 - given set number is valid
+ * @param[in] set_number
+ * @param[in] set_list
+ * @return 0 - error, 1 - given set number is valid
  */
 int set_complement(Set_list* set_list, int set_number)
 {
@@ -1129,6 +1201,12 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
+        case 10:{
+            if (!is_symmetric(relation_list, set_number_1)){
+                return 0;
+            }
+            break;
+        }
         case 14:{
             if (!domain(relation_list, set_number_1)){
                 return 0;
@@ -1341,10 +1419,15 @@ int read_option(char *filename)
     Relation_list relation_list;
     relation_list_ctor(&relation_list);
 
+    int err_flag = 0;
     int current_row = 1;
 
     char c;
     while ((c = fgetc(file)) != EOF){
+
+        if (err_flag){
+            break;
+        }
 
         if (isblank(c)){
             continue;
@@ -1354,27 +1437,27 @@ int read_option(char *filename)
             case 'U':{}
             case 'S':{
                 if (!read_set(file, &set_list, current_row)){
-                    return 0;
+                    err_flag = 1;
                 }
                 current_row++;
                 break;
             }
             case 'R':{
                 if (!read_relation(file, &relation_list, current_row)){
-                    return 0;
+                    err_flag = 1;
                 }
                 current_row++;
                 break;
             }
             case 'C':{
                 if (!read_command(file, &set_list, &relation_list)){
-                    return 0;
+                    err_flag = 1;
                 }
                 break;
             }
             default:{
                 fprintf(stderr, "Bad option.\n");
-                return 0;
+                err_flag = 1;
             }
         }
     }
@@ -1382,6 +1465,10 @@ int read_option(char *filename)
     free_set_list(&set_list);
     free_relation_list(&relation_list);
     fclose(file);
+
+    if (err_flag){
+        return 0;
+    }
 
     return 1;
 }
