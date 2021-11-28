@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 27.11.2021
+ * @date 28.11.2021
  */
 
 #include <stdio.h>
@@ -642,6 +642,47 @@ int find_pair(Pair *pairs, Pair pair, int size)
 
 /**
  * Function prints:
+ * true - relation is reflexive
+ * false - in other case
+ *
+ * @param[in] relation_list
+ * @param[in] set_list
+ * @param[in] row_number
+ * @return 0 - there isn't relation on the row, 1 - in other case
+ */
+int is_reflexive(Relation_list *relation_list, Set_list *set_list, int row_number)
+{
+    if (!check_relation_existence(relation_list, &row_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    char **elements = set_list->sets[0].elements;
+    int size_of_universe = set_list->sets[0].cardinality;
+    Pair *pairs = relation_list->relations[row_number].pairs;
+    int size_of_relation = relation_list->relations[row_number].number_of_pairs;
+
+    for (int i = 0; i < size_of_universe; i++){
+        char *element = elements[i];
+        Pair pair;
+        pair.first = element;
+        pair.second = element;
+
+        if (!find_pair(pairs, pair, size_of_relation)){
+            printf("false\n");
+            return 1;
+        }
+    }
+
+    printf("true\n");
+    
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Function prints:
  * true - relation is symmetric
  * false - in other case
  *
@@ -664,25 +705,19 @@ int is_symmetric(Relation_list *relation_list, int row_number)
     }
 
     Pair *pairs = relation_list->relations[row_number].pairs;
-    int match;
+
     for (int i = 0; i < size; i++){
-        match = 0;
         Pair reverse_pair;
         reverse_pair.first = pairs[i].second;
         reverse_pair.second = pairs[i].first;
 
-        match = find_pair(pairs, reverse_pair, size);
-
-        if (!match){
+        if (!find_pair(pairs, reverse_pair, size)){
             printf("false\n");
-            break;
-        }
-
-        if(i + 1 == size){
-            printf("true\n");
-            break;
+            return 1;
         }
     }
+
+    printf("true\n");
 
     return 1;
 }
@@ -846,7 +881,6 @@ int is_transitive(Relation_list *relation_list, int row_number)
 
     Pair *pairs = relation_list->relations[row_number].pairs;
 
-    int match = 1;
     for (int i = 0; i < size; i++){
         for (int j = 0; j < size; j++){
             if (strcmp(pairs[i].second, pairs[j].first) == 0){
@@ -855,20 +889,14 @@ int is_transitive(Relation_list *relation_list, int row_number)
                 pair.second = pairs[j].second;
 
                 if (!(find_pair(pairs, pair, size))){
-                    match = 0;
-                    break;
+                    printf("false\n");
+                    return 1;
                 }
             }
         }
-        if (!match){
-            printf("false\n");
-            break;
-        }
-        else if (i + 1 == size){
-            printf("true\n");
-            break;
-        }
     }
+
+    printf("true\n");
 
     return 1;
 }
@@ -1491,6 +1519,16 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
                 return 0;
             }
             if (!are_sets_equal(set_list, arg_1, arg_2)){
+                return 0;
+            }
+            break;
+        }
+        case 9:{
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_reflexive(relation_list, set_list, arg_1)){
                 return 0;
             }
             break;
