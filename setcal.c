@@ -555,6 +555,52 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
 /// ======================================================================== ///
 
 /**
+ * Function prints:
+ * true - relation is function
+ * false - in other case
+ *
+ * @param[in] relation_list
+ * @param[in] row_number
+ * @return 0 - there isn't relation on the row, 1 in other case
+ */
+int is_function(Relation_list *relation_list, int row_number)
+{
+    if (!check_relation_existence(relation_list, &row_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size = relation_list->relations[row_number].number_of_pairs;
+
+    if (size == 0){
+        printf("true\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[row_number].pairs;
+    char *elements[size];
+
+    for (int i = 0; i < size; i++){
+        elements[i] = pairs[i].first;
+    }
+
+    qsort(elements, size, sizeof(char*), str_comparator);
+
+    for (int i = 0; i < size; ++i) {
+        if ((i < size - 1) && (strcmp(elements[i], elements[i + 1]) == 0)){
+            printf("false\n");
+            return 1;
+        }
+
+    }
+
+    printf("true\n");
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
  * Function compares two pairs in relation
  *
  * @param[in] pair_1
@@ -741,7 +787,7 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
         domain_of_relation[i] = pairs[i].first;
         codomain_of_relation[i] = pairs[i].second;
     }
-    
+
     qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
     qsort(codomain_of_relation, size_of_relation, sizeof(char*), str_comparator);
 
@@ -768,7 +814,7 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
     if (!match){
         printf("true\n");
     }
-    
+
 
     return 1;
 }
@@ -1475,6 +1521,16 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
                 return 0;
             }
             if (!is_transitive(relation_list, arg_1)){
+                return 0;
+            }
+            break;
+        }
+        case 13:{
+            if (arg_2){
+                fprintf(stderr, "Too many arguments!\n");
+                return 0;
+            }
+            if (!is_function(relation_list, arg_1)){
                 return 0;
             }
             break;
