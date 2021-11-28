@@ -563,21 +563,21 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
  * @param[in] row_number
  * @return 0 - there isn't relation on the row, 1 in other case
  */
-int is_function(Relation_list *relation_list, int row_number)
+int is_function(Relation_list *relation_list, int* row_number)
 {
-    if (!check_relation_existence(relation_list, &row_number)){
+    if (!check_relation_existence(relation_list, row_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    int size = relation_list->relations[row_number].number_of_pairs;
+    int size = relation_list->relations[*row_number].number_of_pairs;
 
     if (size == 0){
         printf("true\n");
         return 1;
     }
 
-    Pair *pairs = relation_list->relations[row_number].pairs;
+    Pair *pairs = relation_list->relations[*row_number].pairs;
     char *elements[size];
 
     for (int i = 0; i < size; i++){
@@ -675,7 +675,6 @@ int is_reflexive(Relation_list *relation_list, Set_list *set_list, int row_numbe
     }
 
     printf("true\n");
-    
     return 1;
 }
 
@@ -748,21 +747,115 @@ int is_antisymmetric(Relation_list *relation_list, int row_number)
     }
 
     Pair *pairs = relation_list->relations[row_number].pairs;
-    int match;
+
     for (int i = 0; i < size; i++){
-        match = 0;
         Pair reverse_pair;
         reverse_pair.first = pairs[i].second;
         reverse_pair.second = pairs[i].first;
 
         /// Find symmetric relation, if pair elems aren't reflexive
         if ( strcmp(reverse_pair.first, reverse_pair.second) != 0){
-            match = find_pair(pairs, reverse_pair, size);
-
-            if (match){
+            if (find_pair(pairs, reverse_pair, size)){
                 printf("false\n");
                 return 1;
             }
+        }
+    }
+
+    printf("true\n");
+    return 1;
+}
+
+/// ======================================================================== ///
+
+/**
+ * Function prints:
+ * true - relation is injective
+ * false - in other case
+ *
+ * @param[in] relation_list
+ * @param[in] set_list
+ * @param[in] relation_number
+ * @param[in] set_number_1
+ * @param[in] set_number_2
+ * @return 0 - error, 1 - given arg numbers are valid
+ */
+int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
+{
+    if (!check_relation_existence(relation_list, &relation_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size_of_relation = relation_list->relations[relation_number].number_of_pairs;
+    int size_of_set_1 = set_list->sets[set_number_1].cardinality;
+    int size_of_set_2 = set_list->sets[set_number_2].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    char** second_set = set_list->sets[set_number_2].elements;
+
+    if (size_of_relation != size_of_set_1){
+        printf("false\n");
+        return 1;
+    }
+
+    if (size_of_set_2 < size_of_set_1){
+        printf("false\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[relation_number].pairs;
+    char *domain_of_relation[size_of_relation];
+    char *codomain_of_relation[size_of_relation];
+
+    for (int i = 0; i < size_of_relation; i++){
+        domain_of_relation[i] = pairs[i].first;
+        codomain_of_relation[i] = pairs[i].second;
+    }
+
+    qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+
+    int found = 0;
+    for (int i = 0; i < size_of_relation; ++i) {
+        if (strcmp(first_set[i], domain_of_relation[i]) != 0){
+            printf("false\n");
+            return 1;
+        }
+
+        /// Check if codomain elems are in second set
+        for (int j = 0; j < size_of_set_2 && !found; ++j){
+            if (strcmp(second_set[j], codomain_of_relation[i]) == 0){
+                found = 1;
+            }
+        }
+        if (!found){
+            printf("false\n");
+            return 1;
+        }
+
+        found = 0;
+        while ((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)){
+            found = 1;
+            break;
+        }
+        if (found){
+            printf("false\n");
+            return 1;
+        }
+
+        found = 0;
+        while ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0)){
+            found = 1;
+            break;
+        }
+        if (found){
+            printf("false\n");
+            return 1;
         }
     }
 
@@ -1589,6 +1682,16 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
                 return 0;
             }
             if (!domain_or_codomain(relation_list, arg_1, 1)){
+                return 0;
+            }
+            break;
+        }
+        case 16:{
+            if (!arg_2 || !arg_3){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!is_injective(relation_list, set_list, arg_1, arg_2, arg_3)){
                 return 0;
             }
             break;
