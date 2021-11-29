@@ -865,6 +865,52 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
 
 /// ======================================================================== ///
 
+int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
+{
+    if (!check_relation_existence(relation_list, &relation_number)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
+        fprintf(stderr, "Can't step on nonexistent row!\n");
+        return 0;
+    }
+
+    int size_of_relation = relation_list->relations[relation_number].number_of_pairs;
+    int size_of_set_1 = set_list->sets[set_number_1].cardinality;
+    int size_of_set_2 = set_list->sets[set_number_2].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    char** second_set = set_list->sets[set_number_2].elements;
+
+    if (size_of_relation != size_of_set_1){
+        printf("false\n");
+        return 1;
+    }
+
+    if (size_of_set_2 > size_of_set_1){
+        printf("false\n");
+        return 1;
+    }
+
+    Pair *pairs = relation_list->relations[relation_number].pairs;
+    char *domain_of_relation[size_of_relation];
+    char *codomain_of_relation[size_of_relation];
+
+    for (int i = 0; i < size_of_relation; i++){
+        domain_of_relation[i] = pairs[i].first;
+        codomain_of_relation[i] = pairs[i].second;
+    }
+
+
+
+}
+
+
+
+/// ======================================================================== ///
+
 /**
  * Function prints:
  * true - relation is bijective
