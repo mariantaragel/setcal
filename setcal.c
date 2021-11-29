@@ -563,21 +563,21 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
  * @param[in] row_number
  * @return 0 - there isn't relation on the row, 1 in other case
  */
-int is_function(Relation_list *relation_list, int* row_number)
+int is_function(Relation_list *relation_list, int row_number)
 {
-    if (!check_relation_existence(relation_list, row_number)){
+    if (!check_relation_existence(relation_list, &row_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
-    int size = relation_list->relations[*row_number].number_of_pairs;
+    int size = relation_list->relations[row_number].number_of_pairs;
 
     if (size == 0){
         printf("true\n");
         return 1;
     }
 
-    Pair *pairs = relation_list->relations[*row_number].pairs;
+    Pair *pairs = relation_list->relations[row_number].pairs;
     char *elements[size];
 
     for (int i = 0; i < size; i++){
@@ -591,7 +591,6 @@ int is_function(Relation_list *relation_list, int* row_number)
             printf("false\n");
             return 1;
         }
-
     }
 
     printf("true\n");
@@ -865,6 +864,18 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
 
 /// ======================================================================== ///
 
+/**
+ * Function prints:
+ * true - relation is surjective
+ * false - in other case
+ *
+ * @param[in] relation_list
+ * @param[in] set_list
+ * @param[in] relation_number
+ * @param[in] set_number_1
+ * @param[in] set_number_2
+ * @return 0 - error, 1 - given arg numbers are valid
+ */
 int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
 {
     if (!check_relation_existence(relation_list, &relation_number)){
@@ -902,12 +913,7 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         domain_of_relation[i] = pairs[i].first;
         codomain_of_relation[i] = pairs[i].second;
     }
-
-
-
 }
-
-
 
 /// ======================================================================== ///
 
@@ -1459,16 +1465,12 @@ int check_element_syntax(char *element, Set_list* set_list)
         }
     }
 
-    int found = 0;
     if (set_list->size > 0){
         for (int i = 0; i < set_list->sets[0].cardinality; i++){
             if (strcmp(element, set_list->sets[0].elements[i]) == 0){
-                found = 1;
+                fprintf(stderr, "Error: Element %s isn't in universe\n", element);
+                return 0;
             }
-        }
-        if (!found){
-            fprintf(stderr, "Error: Element %s isn't in universe\n", element);
-            return 0;
         }
     }
 
