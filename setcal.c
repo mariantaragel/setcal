@@ -885,7 +885,7 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
 
     if (!check_set_existence(set_list, &set_number_1) ||
         !check_set_existence(set_list, &set_number_2)){
-        fprintf(stderr, "Can't step on nonexistent row!\n");
+        fprintf(stderr, "Can't step on nonexistent row!\n"); 
         return 0;
     }
 
