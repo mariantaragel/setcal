@@ -876,6 +876,7 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
  * @param[in] set_number_2
  * @return 0 - error, 1 - given arg numbers are valid
  */
+/*
 int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
 {
     if (!check_relation_existence(relation_list, &relation_number)){
@@ -914,6 +915,7 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         codomain_of_relation[i] = pairs[i].second;
     }
 }
+*/
 
 /// ======================================================================== ///
 
@@ -1437,13 +1439,35 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 /// ======================================================================== ///
 
 /**
+ * Function to check if element is in universe
+ * 
+ * @param[in] element - element to check
+ * @param[in] set_list
+ * @return 0 - element isn't in universe, 1 in other case
+ */
+int is_element_in_universe(Set_list *set_list, char *element)
+{
+    for (int i = 0; i < set_list->sets[0].cardinality; i++){
+        if (strcmp(element, set_list->sets[0].elements[i]) == 0){
+            return 1;
+        }
+    }
+
+    fprintf(stderr, "Error: Element %s isn't in universe\n", element);
+
+    return 0;
+}
+
+/// ======================================================================== ///
+
+/**
  * Function to check syntax of element
  *
  * @param[in] element - element to check
  * @param[in] set_list
  * @return 0 - element has wrong syntax, 1 in other case
  */
-int check_element_syntax(char *element, Set_list* set_list)
+int check_element_syntax(Set_list *set_list, char *element)
 {
     char *command[] = {"empty", "card", "complement", "union",
                        "intersect", "minus", "subseteq", "subset", "equals",
@@ -1466,11 +1490,8 @@ int check_element_syntax(char *element, Set_list* set_list)
     }
 
     if (set_list->size > 0){
-        for (int i = 0; i < set_list->sets[0].cardinality; i++){
-            if (strcmp(element, set_list->sets[0].elements[i]) == 0){
-                fprintf(stderr, "Error: Element %s isn't in universe\n", element);
-                return 0;
-            }
+        if (!is_element_in_universe(set_list, element)){
+            return 0;
         }
     }
 
@@ -1480,11 +1501,11 @@ int check_element_syntax(char *element, Set_list* set_list)
 /// ======================================================================== ///
 
 /**
- *  Function parses options given in file
- *
+ * Function parses options given in file
+ * 
  * @param file
  * @param set_list
- * @return 0 - command was wrong, 1 in other case
+ * @return 0 - command was wrong, 1 - in other case
  */
 int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
 {
@@ -1744,6 +1765,16 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
+        case 17:{
+            if (!arg_2 || !arg_3){
+                fprintf(stderr, "Too few arguments!\n");
+                return 0;
+            }
+            if (!is_surjective(relation_list, set_list, arg_1, arg_2, arg_3)){
+                return 0;
+            }
+            break;
+        }
         case 18:{
             if (!arg_2 || !arg_3){
                 fprintf(stderr, "Too few arguments!\n");
@@ -1771,7 +1802,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
  * @param[in] rel_list
  * @return 0 in case of error, 1 in other case
  */
-int read_relation(FILE *file, Relation_list *relation_list, int current_row)
+int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, int current_row)
 {
     char c = fgetc(file);
     if (c != ' ' && c != '\n'){
@@ -1810,6 +1841,9 @@ int read_relation(FILE *file, Relation_list *relation_list, int current_row)
             }
         }
         element_1[index_elem_1] = '\0';
+        if (!is_element_in_universe(set_list, element_1)){
+            return 0;
+        }
 
         int index_elem_2 = 0;
         char element_2[31];
@@ -1823,21 +1857,30 @@ int read_relation(FILE *file, Relation_list *relation_list, int current_row)
             }
         }
         element_2[index_elem_2] = '\0';
+        if (!is_element_in_universe(set_list, element_2)){
+            return 0;
+        }
 
         Pair new_pair;
         pair_ctor(&new_pair);
 
-        if (!(add_elements_to_pair(&new_pair, element_1, element_2, index_elem_1, index_elem_2))){
+        if (!add_elements_to_pair(&new_pair, element_1, element_2, index_elem_1, index_elem_2)){
             free_pair(&new_pair);
             return 0;
         }
-        if (!(add_pair_to_relation(&new_relation, &new_pair))){
+        if (find_pair(new_relation.pairs, new_pair, new_relation.number_of_pairs)){
+            fprintf(stderr, "Pair was already stored!\n");
+            free_pair(&new_pair);
+            return 0;
+        }
+        
+        if (!add_pair_to_relation(&new_relation, &new_pair)){
             free_relation(&new_relation);
             return 0;
         }
     }
 
-    if (!(add_relation_to_list(relation_list, &new_relation))){
+    if (!add_relation_to_list(relation_list, &new_relation)){
         free_relation(&new_relation);
         return 0;
     }
@@ -1895,7 +1938,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
 
         if (elem_idx == 0){
             element[last_elem_idx] = '\0';
-            if (!(check_element_syntax(element, set_list))){
+            if (!(check_element_syntax(set_list, element))){
                 free_set(&new_set);
                 return 0;
             }
@@ -1918,7 +1961,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
 
     /// Add last element to set
     element[last_elem_idx] = '\0';
-    if (!(check_element_syntax(element, set_list))){
+    if (!(check_element_syntax(set_list, element))){
         free_set(&new_set);
         return 0;
     }
@@ -1936,14 +1979,13 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
     return 1;
 }
 
-
 /// ======================================================================== ///
 
 /**
  *  Function parses options given in file
  *
  * @param[in] filename
- * @return    0 - error, 1 - in other case
+ * @return 0 - error, 1 - in other case
  */
 int read_option(char *filename)
 {
@@ -1984,7 +2026,7 @@ int read_option(char *filename)
                 break;
             }
             case 'R':{
-                if (!read_relation(file, &relation_list, current_row)){
+                if (!read_relation(file, &relation_list, &set_list, current_row)){
                     err_flag = 1;
                 }
                 current_row++;
