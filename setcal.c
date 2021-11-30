@@ -41,6 +41,9 @@ typedef struct{
     int capacity;
 } Relation_list;
 
+
+
+
 /// ======================================================================== ///
 
 int str_comparator(const void* s1, const void* s2)
@@ -837,22 +840,9 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
             return 1;
         }
 
-        found = 0;
-        while ((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)){
-            found = 1;
-            break;
-        }
-        if (found){
-            printf("false\n");
-            return 1;
-        }
-
-        found = 0;
-        while ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0)){
-            found = 1;
-            break;
-        }
-        if (found){
+        /// Check if relation's domain and codomain have unique elements
+        if (((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)) ||
+            ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0))){
             printf("false\n");
             return 1;
         }
@@ -886,7 +876,7 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
 
     if (!check_set_existence(set_list, &set_number_1) ||
         !check_set_existence(set_list, &set_number_2)){
-        fprintf(stderr, "Can't step on nonexistent row!\n"); 
+        fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
 
@@ -937,6 +927,7 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
+
     if (!check_set_existence(set_list, &set_number_1) ||
         !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
@@ -973,31 +964,16 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
     qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
     qsort(codomain_of_relation, size_of_relation, sizeof(char*), str_comparator);
 
-    int match = 0;
     for (int i = 0; i < size_of_relation; i++){
-        while ((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)){
-            match = 1;
-            break;
-        }
-        if (match){
+        /// Check if relation's domain and codomain have unique elements
+        if (((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)) ||
+            ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0))){
             printf("false\n");
-            break;
-        }
-
-        while ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0)){
-            match = 1;
-            break;
-        }
-        if (match){
-            printf("false\n");
-            break;
+            return 1;
         }
     }
-    if (!match){
-        printf("true\n");
-    }
 
-
+    printf("true\n");
     return 1;
 }
 
@@ -1121,8 +1097,8 @@ int set_card(Set_list *set_list, int set_number)
  */
 int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if (   !check_set_existence(set_list, &set_number_1)
-           || !check_set_existence(set_list, &set_number_2)){
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1168,8 +1144,8 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
 
-    if (   !check_set_existence(set_list, &set_number_1)
-           || !check_set_existence(set_list, &set_number_2)){
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1222,8 +1198,8 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 {
 
-    if (   !check_set_existence(set_list, &set_number_1)
-           || !check_set_existence(set_list, &set_number_2)){
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1276,8 +1252,8 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
  */
 int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if (   !check_set_existence(set_list, &set_number_1)
-           || !check_set_existence(set_list, &set_number_2)){
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1331,7 +1307,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
  * @param[in] set_list
  * @param[in] set_number
  * @return 0 given set number is valid, 1 input is correct
- */
+ **/
 int is_set_empty(Set_list *set_list, int set_number)
 {
     if ( !check_set_existence(set_list, &set_number) ){
@@ -1440,7 +1416,7 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 
 /**
  * Function to check if element is in universe
- * 
+ *
  * @param[in] element - element to check
  * @param[in] set_list
  * @return 0 - element isn't in universe, 1 in other case
@@ -1502,7 +1478,7 @@ int check_element_syntax(Set_list *set_list, char *element)
 
 /**
  * Function parses options given in file
- * 
+ *
  * @param file
  * @param set_list
  * @return 0 - command was wrong, 1 - in other case
@@ -1514,6 +1490,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
                        "reflexive", "symmetric", "antisymmetric", "transitive",
                        "function", "domain", "codomain", "injective",
                        "surjective", "bijective"};
+
 
     char c = fgetc(file);
     if (c != ' '){
@@ -1770,9 +1747,9 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-            if (!is_surjective(relation_list, set_list, arg_1, arg_2, arg_3)){
-                return 0;
-            }
+//            if (!is_surjective(relation_list, set_list, arg_1, arg_2, arg_3)){
+//                return 0;
+//            }
             break;
         }
         case 18:{
@@ -1873,7 +1850,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
             free_pair(&new_pair);
             return 0;
         }
-        
+
         if (!add_pair_to_relation(&new_relation, &new_pair)){
             free_relation(&new_relation);
             return 0;
