@@ -876,7 +876,7 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
  * @param[in] set_number_2
  * @return 0 - error, 1 - given arg numbers are valid
  */
-/*
+
 int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
 {
     if (!check_relation_existence(relation_list, &relation_number)){
@@ -915,7 +915,6 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         codomain_of_relation[i] = pairs[i].second;
     }
 }
-*/
 
 /// ======================================================================== ///
 
@@ -2005,6 +2004,9 @@ int read_option(char *filename)
     int err_flag = 0;
     int current_row = 1;
 
+    int universe_flag = 0;
+    int set_or_relation_flag = 0;
+    int read_command_flag = 0;
     char c;
     while ((c = fgetc(file)) != EOF){
 
@@ -2017,18 +2019,42 @@ int read_option(char *filename)
         }
 
         switch (c) {
-            case 'U':{}
-            case 'S':{
+            case 'U':{
+                if (universe_flag){
+                    fprintf(stderr, "Wrong syntax of input file!\n");
+                    err_flag = 1;
+                    break;
+                }
                 if (!read_set(file, &set_list, current_row)){
                     err_flag = 1;
                 }
+                universe_flag = 1;
+                current_row++;
+                break;
+            }
+            case 'S':{
+                if (read_command_flag){
+                    fprintf(stderr, "Wrong syntax of input file!\n");
+                    err_flag = 1;
+                    break;
+                }
+                if (!read_set(file, &set_list, current_row)){
+                    err_flag = 1;
+                }
+                set_or_relation_flag = 1;
                 current_row++;
                 break;
             }
             case 'R':{
+                if (read_command_flag){
+                    fprintf(stderr, "Wrong syntax of input file!\n");
+                    err_flag = 1;
+                    break;
+                }
                 if (!read_relation(file, &relation_list, &set_list, current_row)){
                     err_flag = 1;
                 }
+                set_or_relation_flag = 1;
                 current_row++;
                 break;
             }
@@ -2036,6 +2062,7 @@ int read_option(char *filename)
                 if (!read_command(file, &set_list, &relation_list)){
                     err_flag = 1;
                 }
+                read_command_flag = 1;
                 break;
             }
             default:{
@@ -2043,6 +2070,27 @@ int read_option(char *filename)
                 err_flag = 1;
             }
         }
+
+        if (!universe_flag){
+            fprintf(stderr, "Wrong syntax of input file!\n");
+            err_flag = 1;
+        }
+        
+        if (read_command_flag && !set_or_relation_flag){
+            fprintf(stderr, "Wrong syntax of input file!\n");
+            err_flag = 1;
+        }
+    }
+
+    if (!err_flag){
+        if (current_row <= 2){
+            fprintf(stderr, "Error: Only universe!\n");
+            err_flag = 1;
+        }
+        if (!read_command_flag){
+            fprintf(stderr, "No commands in input file!\n");
+            err_flag = 1;
+        }        
     }
 
     free_set_list(&set_list);
