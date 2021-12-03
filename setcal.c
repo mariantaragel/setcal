@@ -2,13 +2,16 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 28.11.2021
+ * @date 3.12.2021
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+
+#define MAX_STRING_LENGTH 30
+#define MAX_LINES 1000
 
 typedef struct{
     char **elements;
@@ -41,17 +44,14 @@ typedef struct{
     int capacity;
 } Relation_list;
 
-
-
-
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 int str_comparator(const void* s1, const void* s2)
 {
     return strcmp(*(const char**)s1, *(const char**)s2);
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Constructor for set
@@ -66,10 +66,10 @@ void set_ctor(Set *set, int current_row)
     set->position = current_row;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function free resources for set
+ * Function free resources for set
  *
  * @param[in] set
  */
@@ -92,7 +92,7 @@ void free_set(Set* set)
     set->position = 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Constructor for list of sets
@@ -106,10 +106,10 @@ void set_list_ctor(Set_list* set_list)
     set_list->size = 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function free resources for list of sets
+ * Function free resources for list of sets
  *
  * @param[in] set_list
  */
@@ -126,7 +126,7 @@ void free_set_list(Set_list* set_list)
     set_list->capacity = 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Constructor for pair
@@ -139,7 +139,7 @@ void pair_ctor(Pair *pair)
     pair->second = NULL;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  *  Function free resources for pair
@@ -156,7 +156,7 @@ void free_pair(Pair *pair)
     }
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Constructor for relation
@@ -171,10 +171,10 @@ void relation_ctor(Relation *relation, int current_row)
     relation->position = current_row;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function free resources for relation
+ * Function free resources for relation
  *
  * @param[in] relation
  */
@@ -193,7 +193,7 @@ void free_relation(Relation *relation)
     relation->position = 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Constructor for list of pairs
@@ -207,10 +207,10 @@ void relation_list_ctor(Relation_list *relation_list)
     relation_list->capacity = 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function free resources for relation_list
+ * Function free resources for relation_list
  *
  * @param[in] relation_list
  */
@@ -229,15 +229,15 @@ void free_relation_list(Relation_list *relation_list)
     relation_list->capacity = 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function to add element to set
+ * Function to add element to set
  *
  * @param[in] set
  * @param[in] elem
  * @param[in] elem_length
- * @return 0 error, 1
+ * @return 0 error, 1 in other case
  */
 int add_element_to_set(Set *set, char* elem, int elem_length)
 {
@@ -276,10 +276,10 @@ int add_element_to_set(Set *set, char* elem, int elem_length)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function add set to list
+ * Function add set to list
  *
  * @param[in] set_list
  * @param[in] new_set set, that will be added to list
@@ -309,10 +309,10 @@ int add_set_to_list(Set_list* set_list, Set* new_set)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
- *  Function to add element to set
+ * Function to add element to set
  *
  * @param[in] set
  * @param[in] elem
@@ -343,7 +343,7 @@ int add_elements_to_pair(Pair *pair, char *first, char *second, int first_length
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function add pair to relation
@@ -380,7 +380,7 @@ int add_pair_to_relation(Relation *relation, Pair *pair)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function add relation to list of relations
@@ -416,7 +416,7 @@ int add_relation_to_list(Relation_list *relation_list, Relation *relation)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function print set on stdout
@@ -443,7 +443,7 @@ void print_set(Set_list *set_list, Set set)
     }
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function print relation on stdout
@@ -464,7 +464,7 @@ void print_relation(Relation relation)
     }
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function find index of set on given row
@@ -484,7 +484,7 @@ int check_set_existence(Set_list* set_list, int* row)
     return 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function find index of relation on given row
@@ -504,17 +504,58 @@ int check_relation_existence(Relation_list* rel_list, int* row)
     return 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
+
+/**
+ * Function compares two pairs in relation
+ *
+ * @param[in] pair_1
+ * @param[in] pair_2
+ * @return 1 - pairs are identical, 0 - in other case
+ */
+int compare_pairs(Pair pair_1, Pair pair_2)
+{
+    int match_1 = strcmp(pair_1.first, pair_2.first);
+    int match_2 = strcmp(pair_1.second, pair_2.second);
+    if (match_1 || match_2){
+        return 0;
+    }
+
+    return 1;
+}
+
+/// ======================================================================= ///
+
+/**
+ * Function find pair in array of pairs
+ *
+ * @param[in] pairs
+ * @param[in] pair
+ * @param[in] size
+ * @return 1 - pair found, 0 - in other case
+ */
+int find_pair(Pair *pairs, Pair pair, int size)
+{
+    for (int i = 0; i < size; i++){
+        if (compare_pairs(pairs[i], pair)){
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/// ======================================================================= ///
 
 /**
  * Function find domain or codomain of relation
  *
  * @param[in] relation_list
  * @param[in] row_number
- * @param[in] codomain_on 0 - find domain, 1 - find codomain
+ * @param[in] codomain_flag 0 - find domain, 1 - find codomain
  * @return 0 - there isn't relation on the row, 1 in other case
  */
-int domain_or_codomain(Relation_list* relation_list, int row_number, int codomain_on)
+int domain_or_codomain(Relation_list* relation_list, int row_number, int codomain_flag)
 {
     if (!check_relation_existence(relation_list, &row_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
@@ -530,7 +571,7 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
 
     Pair *pairs = relation_list->relations[row_number].pairs;
     char *elements[size];
-    if (codomain_on){
+    if (codomain_flag){
         for (int i = 0; i < size; i++){
             elements[i] = pairs[i].second;
         }
@@ -555,7 +596,7 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -564,7 +605,7 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
  *
  * @param[in] relation_list
  * @param[in] row_number
- * @return 0 - there isn't relation on the row, 1 in other case
+ * @return 0 - there isn't relation on the row, 1 - in other case
  */
 int is_function(Relation_list *relation_list, int row_number)
 {
@@ -600,47 +641,7 @@ int is_function(Relation_list *relation_list, int row_number)
     return 1;
 }
 
-/// ======================================================================== ///
-
-/**
- * Function compares two pairs in relation
- *
- * @param[in] pair_1
- * @param[in] pair_2
- * @return 1 - pairs are identical, 0 - in other case
- */
-int compare_pairs(Pair pair_1, Pair pair_2)
-{
-    int match_1 = strcmp(pair_1.first, pair_2.first);
-    int match_2 = strcmp(pair_1.second, pair_2.second);
-    if (match_1 || match_2){
-        return 0;
-    }
-
-    return 1;
-}
-
-/// ======================================================================== ///
-/**
- * Function find pair in array of pairs
- *
- * @param[in] pairs
- * @param[in] pair
- * @param[in] size
- * @return 1 - pair found, 0 - in other case
- */
-int find_pair(Pair *pairs, Pair pair, int size)
-{
-    for (int i = 0; i < size; i++){
-        if (compare_pairs(pairs[i], pair)){
-            return 1;
-        }
-    }
-
-    return 0;
-}
-
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -680,7 +681,7 @@ int is_reflexive(Relation_list *relation_list, Set_list *set_list, int row_numbe
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -689,7 +690,7 @@ int is_reflexive(Relation_list *relation_list, Set_list *set_list, int row_numbe
  *
  * @param[in] relation_list
  * @param[in] row_number
- * @return 0 - there isn't relation on the row, 1 in other case
+ * @return 0 - there isn't relation on the row, 1 - in other case
  */
 int is_symmetric(Relation_list *relation_list, int row_number)
 {
@@ -723,7 +724,7 @@ int is_symmetric(Relation_list *relation_list, int row_number)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -732,7 +733,7 @@ int is_symmetric(Relation_list *relation_list, int row_number)
  *
  * @param[in] relation_list
  * @param[in] row_number
- * @return 0 - there isn't relation on the row, 1 in other case
+ * @return 0 - there isn't relation on the row, 1 - in other case
  */
 int is_antisymmetric(Relation_list *relation_list, int row_number)
 {
@@ -768,7 +769,7 @@ int is_antisymmetric(Relation_list *relation_list, int row_number)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -852,7 +853,7 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -866,7 +867,7 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
  * @param[in] set_number_2
  * @return 0 - error, 1 - given arg numbers are valid
  */
-
+/*
 int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
 {
     if (!check_relation_existence(relation_list, &relation_number)){
@@ -905,8 +906,8 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         codomain_of_relation[i] = pairs[i].second;
     }
 }
-
-/// ======================================================================== ///
+*/
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -976,7 +977,7 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -985,7 +986,7 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
  *
  * @param[in] relation_list
  * @param[in] row_number
- * @return 0 - there isn't relation on the row, 1 in other case
+ * @return 0 - there isn't relation on the row, 1 - in other case
  */
 int is_transitive(Relation_list *relation_list, int row_number)
 {
@@ -1023,7 +1024,7 @@ int is_transitive(Relation_list *relation_list, int row_number)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints complement of set
@@ -1063,14 +1064,14 @@ int set_complement(Set_list* set_list, int set_number)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function print number of elements in set
  *
  * @param set_list
  * @param set_number
- * @return 0 error, 1 - given set number is valid
+ * @return 0 - error, 1 - given set number is valid
  */
 int set_card(Set_list *set_list, int set_number)
 {
@@ -1084,7 +1085,7 @@ int set_card(Set_list *set_list, int set_number)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function print union of sets
@@ -1092,7 +1093,7 @@ int set_card(Set_list *set_list, int set_number)
  * @param set_list
  * @param set_number_1
  * @param set_number_2
- * @return 0 error, 1 - given set number is valid
+ * @return 0 - error, 1 - given set number is valid
  */
 int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
@@ -1130,7 +1131,7 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints minus of 2 sets
@@ -1138,7 +1139,7 @@ int union_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
  * @param[in] set_list
  * @param[in] set_number_1
  * @param[in] set_number_2
- * @return 0 error, 1 - given set number is valid
+ * @return 0 - error, 1 - given set number is valid
  */
 int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
@@ -1182,7 +1183,7 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 }
 
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -1192,7 +1193,7 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
  * @param[in] set_list
  * @param[in] set_number_1
  * @param[in] set_number_2
- * @return 0 given set numbers are invalid, 1 input is correct
+ * @return 0 - given set numbers are invalid, 1 - input is correct
  */
 int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 {
@@ -1237,7 +1238,7 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -1247,7 +1248,7 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
  * @param[in] set_list
  * @param[in] set_number_1
  * @param[in] set_number_2
- * @return 0 given set numbers are invalid, 1 input is correct
+ * @return 0 - given set numbers are invalid, 1 - input is correct
  */
 int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
 {
@@ -1296,7 +1297,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function prints:
@@ -1305,8 +1306,8 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
  *
  * @param[in] set_list
  * @param[in] set_number
- * @return 0 given set number is valid, 1 input is correct
- **/
+ * @return 0 - given set number is valid, 1 - input is correct
+ */
 int is_set_empty(Set_list *set_list, int set_number)
 {
     if ( !check_set_existence(set_list, &set_number) ){
@@ -1324,7 +1325,7 @@ int is_set_empty(Set_list *set_list, int set_number)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
 * Prints true - equal, false - not equal
@@ -1373,7 +1374,7 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
 * Function prints intersect of 2 sets
@@ -1411,14 +1412,14 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function to check if element is in universe
  *
  * @param[in] element - element to check
  * @param[in] set_list
- * @return 0 - element isn't in universe, 1 in other case
+ * @return 0 - element isn't in universe, 1 - in other case
  */
 int is_element_in_universe(Set_list *set_list, char *element)
 {
@@ -1433,14 +1434,14 @@ int is_element_in_universe(Set_list *set_list, char *element)
     return 0;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function to check syntax of element
  *
  * @param[in] element - element to check
  * @param[in] set_list
- * @return 0 - element has wrong syntax, 1 in other case
+ * @return 0 - element has wrong syntax, 1 - in other case
  */
 int check_element_syntax(Set_list *set_list, char *element)
 {
@@ -1473,7 +1474,7 @@ int check_element_syntax(Set_list *set_list, char *element)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  * Function parses options given in file
@@ -1769,14 +1770,14 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  *  Function parses options given in file
  *
  * @param[in] file - pointer to filestream
  * @param[in] rel_list
- * @return 0 in case of error, 1 in other case
+ * @return 0 - in case of error, 1 - in other case
  */
 int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, int current_row)
 {
@@ -1810,7 +1811,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
         while ((c = fgetc(file)) != ' '){
             element_1[index_elem_1] = c;
             index_elem_1++;
-            if (index_elem_1 > 30){
+            if (index_elem_1 > MAX_STRING_LENGTH){
                 fprintf(stderr, "Wrong set element!\n");
                 free_relation(&new_relation);
                 return 0;
@@ -1818,6 +1819,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
         }
         element_1[index_elem_1] = '\0';
         if (!is_element_in_universe(set_list, element_1)){
+            free_relation(&new_relation);
             return 0;
         }
 
@@ -1826,7 +1828,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
         while ((c = fgetc(file)) != ')'){
             element_2[index_elem_2] = c;
             index_elem_2++;
-            if (index_elem_2 > 30){
+            if (index_elem_2 > MAX_STRING_LENGTH){
                 fprintf(stderr, "Wrong set element!\n");
                 free_relation(&new_relation);
                 return 0;
@@ -1834,6 +1836,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
         }
         element_2[index_elem_2] = '\0';
         if (!is_element_in_universe(set_list, element_2)){
+            free_relation(&new_relation);
             return 0;
         }
 
@@ -1844,9 +1847,11 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
             free_pair(&new_pair);
             return 0;
         }
+
         if (find_pair(new_relation.pairs, new_pair, new_relation.number_of_pairs)){
             fprintf(stderr, "Pair was already stored!\n");
             free_pair(&new_pair);
+            free_relation(&new_relation);
             return 0;
         }
 
@@ -1866,14 +1871,14 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  *  Function parses options given in file
  *
  * @param[in] file - pointer to filestream
  * @param[in] set_list
- * @return    0 in case of error, 1 in other case
+ * @return 0 - in case of error, 1 - in other case
  */
 int read_set(FILE* file, Set_list* set_list, int current_row)
 {
@@ -1898,7 +1903,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
 
     /// Read the first element from the file
     fscanf(file, "%31s", element);
-    if (strlen(element) > 30){
+    if (strlen(element) > MAX_STRING_LENGTH){
         free_set(&new_set);
         fprintf(stderr, "Wrong set element!\n");
         return 0;
@@ -1924,7 +1929,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
             }
         }
 
-        if (elem_idx >= 30){
+        if (elem_idx >= MAX_STRING_LENGTH){
             fprintf(stderr, "Wrong set element!\n");
             free_set(&new_set);
             return 0;
@@ -1955,7 +1960,7 @@ int read_set(FILE* file, Set_list* set_list, int current_row)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 /**
  *  Function parses options given in file
@@ -1993,6 +1998,12 @@ int read_option(char *filename)
 
         if (isblank(c)){
             continue;
+        }
+
+        if (current_row > MAX_LINES){
+            fprintf(stderr, "Input file is too long!");
+            err_flag = 1;
+            break;
         }
 
         switch (c) {
@@ -2081,7 +2092,7 @@ int read_option(char *filename)
     return 1;
 }
 
-/// ======================================================================== ///
+/// ======================================================================= ///
 
 int main(int argc, char **argv)
 {
