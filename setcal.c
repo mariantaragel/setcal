@@ -571,6 +571,7 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
 
     Pair *pairs = relation_list->relations[row_number].pairs;
     char *elements[size];
+    
     if (codomain_flag){
         for (int i = 0; i < size; i++){
             elements[i] = pairs[i].second;
@@ -636,8 +637,8 @@ int is_function(Relation_list *relation_list, int row_number)
             return 1;
         }
     }
-
     printf("true\n");
+    
     return 1;
 }
 
@@ -676,8 +677,8 @@ int is_reflexive(Relation_list *relation_list, Set_list *set_list, int row_numbe
             return 1;
         }
     }
-
     printf("true\n");
+    
     return 1;
 }
 
@@ -757,15 +758,15 @@ int is_antisymmetric(Relation_list *relation_list, int row_number)
         reverse_pair.second = pairs[i].first;
 
         /// Find symmetric relation, if pair elems aren't reflexive
-        if ( strcmp(reverse_pair.first, reverse_pair.second) != 0){
+        if (strcmp(reverse_pair.first, reverse_pair.second) != 0){
             if (find_pair(pairs, reverse_pair, size)){
                 printf("false\n");
                 return 1;
             }
         }
     }
-
     printf("true\n");
+    
     return 1;
 }
 
@@ -867,7 +868,7 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
  * @param[in] set_number_2
  * @return 0 - error, 1 - given arg numbers are valid
  */
-/*
+
 int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation_number, int set_number_1, int set_number_2)
 {
     if (!check_relation_existence(relation_list, &relation_number)){
@@ -906,7 +907,7 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         codomain_of_relation[i] = pairs[i].second;
     }
 }
-*/
+
 /// ======================================================================= ///
 
 /**
@@ -1035,7 +1036,7 @@ int is_transitive(Relation_list *relation_list, int row_number)
  */
 int set_complement(Set_list* set_list, int set_number)
 {
-    if ( !check_set_existence(set_list, &set_number) ){
+    if (!check_set_existence(set_list, &set_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1061,6 +1062,7 @@ int set_complement(Set_list* set_list, int set_number)
         }
     }
     printf("\n");
+    
     return 1;
 }
 
@@ -1075,7 +1077,7 @@ int set_complement(Set_list* set_list, int set_number)
  */
 int set_card(Set_list *set_list, int set_number)
 {
-    if ( !check_set_existence(set_list, &set_number) ){
+    if (!check_set_existence(set_list, &set_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1157,16 +1159,13 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     int second_set_size = set_list->sets[set_number_2].cardinality;
 
     int is_found = 0;
-
-
     int curr_s2_idx = 0;
 
     printf("S");
 
     for (int i = 0; i < first_set_size; ++i) {
-
         for (int j = curr_s2_idx; j < second_set_size && !is_found; ++j) {
-            if ( strcmp(first_set[i], second_set[j]) == 0 ){
+            if (strcmp(first_set[i], second_set[j]) == 0){
                 is_found = 1;
                 curr_s2_idx = j + 1;
             }
@@ -1182,7 +1181,6 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     return 1;
 }
 
-
 /// ======================================================================= ///
 
 /**
@@ -1197,7 +1195,6 @@ int minus_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
  */
 int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 {
-
     if (!check_set_existence(set_list, &set_number_1) ||
         !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
@@ -1221,8 +1218,7 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
 
     for (int i = 0; i < first_set_size; ++i) {
         for (int j = curr_set_idx; j < second_set_size && !has_elem; ++j) {
-
-            if ( strcmp(first_set[i], second_set[j]) == 0 ){
+            if (strcmp(first_set[i], second_set[j]) == 0){
                 has_elem = 1;
                 curr_set_idx = j + 1;
             }
@@ -1233,8 +1229,8 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
         }
         has_elem = 0;
     }
-
     printf("true\n");
+    
     return 1;
 }
 
@@ -1277,7 +1273,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
         for (int i = 0; i < first_set_size; i++){
             found = 0;
             for (int j = 0; j < second_set_size; j++){
-                if (strcmp(first_set[i], second_set[j])== 0){
+                if (strcmp(first_set[i], second_set[j]) == 0){
                     found = 1;
                     has_elem++;
                     break;
@@ -1310,7 +1306,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
  */
 int is_set_empty(Set_list *set_list, int set_number)
 {
-    if ( !check_set_existence(set_list, &set_number) ){
+    if (!check_set_existence(set_list, &set_number)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1360,15 +1356,13 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
             if (strcmp(first_set[i], second_set[i]) != 0){
                 printf("false\n");
                 match = 0;
-                break;
+                return 1;
             }
             else {
                 continue;
             }
         }
-        if (match){
-            printf("true\n");
-        }
+        printf("true\n");
     }
 
     return 1;
@@ -1385,7 +1379,7 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 */
 int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if (   !check_set_existence(set_list, &set_number_1)
+    if (!check_set_existence(set_list, &set_number_1)
            || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
@@ -1397,9 +1391,7 @@ int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
     char** second_set = set_list->sets[set_number_2].elements;
     int second_set_size = set_list->sets[set_number_2].cardinality;
 
-
     printf("S");
-
     for (int i = 0; i < first_set_size; i++){
         for (int j = 0; j < second_set_size; j++){
             if (strcmp(first_set[i], second_set[j]) == 0){
