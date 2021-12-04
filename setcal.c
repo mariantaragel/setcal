@@ -886,7 +886,6 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
     int size_of_relation = relation_list->relations[relation_number].number_of_pairs;
     int size_of_set_1 = set_list->sets[set_number_1].cardinality;
     int size_of_set_2 = set_list->sets[set_number_2].cardinality;
-    char** first_set = set_list->sets[set_number_1].elements;
     char** second_set = set_list->sets[set_number_2].elements;
 
     if (size_of_relation != size_of_set_1){
