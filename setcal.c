@@ -897,6 +897,10 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         printf("false\n");
         return 1;
     }
+    if (size_of_set_2 == size_of_set_1){
+        printf("false\n");
+        return 1;
+    }
 
     Pair *pairs = relation_list->relations[relation_number].pairs;
     char *domain_of_relation[size_of_relation];
@@ -906,6 +910,36 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         domain_of_relation[i] = pairs[i].first;
         codomain_of_relation[i] = pairs[i].second;
     }
+     qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+
+    for (int i = 0; i < size_of_relation; i++)
+    {
+        if (strcmp(first_set[i], domain_of_relation[i]) != 0){
+            printf("false\n");
+            return 1;
+        }
+
+        /// Check if codomain elems are in second set
+        for (int j = 0; j < size_of_set_2 && !found; ++j){
+            if (strcmp(second_set[j], codomain_of_relation[i]) == 0){
+                found = 1;
+            }
+        }
+        if (!found){
+            printf("false\n");
+            return 1;
+        }
+
+        /// Check if relation's domain and codomain have unique elements
+        if (((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)) ||
+            ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0))){
+            printf("false\n");
+            return 1;
+        }
+    }
+
+    printf("true\n");
+    return 1;
 }
 
 /// ======================================================================= ///
