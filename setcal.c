@@ -571,7 +571,7 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
 
     Pair *pairs = relation_list->relations[row_number].pairs;
     char *elements[size];
-    
+
     if (codomain_flag){
         for (int i = 0; i < size; i++){
             elements[i] = pairs[i].second;
@@ -638,7 +638,7 @@ int is_function(Relation_list *relation_list, int row_number)
         }
     }
     printf("true\n");
-    
+
     return 1;
 }
 
@@ -678,7 +678,7 @@ int is_reflexive(Relation_list *relation_list, Set_list *set_list, int row_numbe
         }
     }
     printf("true\n");
-    
+
     return 1;
 }
 
@@ -766,7 +766,7 @@ int is_antisymmetric(Relation_list *relation_list, int row_number)
         }
     }
     printf("true\n");
-    
+
     return 1;
 }
 
@@ -823,6 +823,7 @@ int is_injective(Relation_list *relation_list, Set_list *set_list, int relation_
     }
 
     qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+    qsort(codomain_of_relation, size_of_relation, sizeof(char*), str_comparator);
 
     int found = 0;
     for (int i = 0; i < size_of_relation; ++i) {
@@ -906,6 +907,51 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
         domain_of_relation[i] = pairs[i].first;
         codomain_of_relation[i] = pairs[i].second;
     }
+
+    qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+    qsort(codomain_of_relation, size_of_relation, sizeof(char*), str_comparator);
+
+    int found = 0;
+    for (int i = 0; i < size_of_relation; ++i){
+
+        /// Check if codomain elems are in second set
+        for (int j = 0; j < size_of_set_2 && !found; ++j) {
+            if (strcmp(second_set[j], codomain_of_relation[i]) == 0) {
+                found = 1;
+            }
+        }
+
+        if (!found) {
+            printf("false\n");
+            return 1;
+        }
+
+        /// Check if relation domain has unique elements
+        if ((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)){
+            printf("false\n");
+            return 1;
+        }
+    }
+
+    int j = 0;
+    for (int i = 0; i < size_of_relation; ++i) {
+        while ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0)) {
+            i++;
+        }
+        if ((j < size_of_set_2 - 1) && strcmp(codomain_of_relation[i], second_set[j]) != 0){
+            printf("false\n");
+            return 1;
+        }
+        j++;
+    }
+
+    if ( j <= size_of_set_2 - 1){
+        printf("false\n");
+        return 1;
+    }
+
+    printf("true\n");
+    return 1;
 }
 
 /// ======================================================================= ///
@@ -938,6 +984,8 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
     int size_of_relation = relation_list->relations[relation_number].number_of_pairs;
     int size_of_set_1 = set_list->sets[set_number_1].cardinality;
     int size_of_set_2 = set_list->sets[set_number_2].cardinality;
+    char** first_set = set_list->sets[set_number_1].elements;
+    char** second_set = set_list->sets[set_number_2].elements;
 
     if (size_of_set_1 != size_of_set_2){
         printf("false\n");
@@ -965,7 +1013,25 @@ int is_bijective(Relation_list *relation_list, Set_list *set_list, int relation_
     qsort(domain_of_relation, size_of_relation, sizeof(char*), str_comparator);
     qsort(codomain_of_relation, size_of_relation, sizeof(char*), str_comparator);
 
+    int found = 0;
     for (int i = 0; i < size_of_relation; i++){
+
+        if (strcmp(first_set[i], domain_of_relation[i]) != 0){
+            printf("false\n");
+            return 1;
+        }
+
+        /// Check if codomain elems are in second set
+        for (int j = 0; j < size_of_set_2 && !found; ++j){
+            if (strcmp(second_set[j], codomain_of_relation[i]) == 0){
+                found = 1;
+            }
+        }
+        if (!found){
+            printf("false\n");
+            return 1;
+        }
+
         /// Check if relation's domain and codomain have unique elements
         if (((i < size_of_relation - 1) && (strcmp(domain_of_relation[i], domain_of_relation[i + 1]) == 0)) ||
             ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0))){
@@ -1062,7 +1128,7 @@ int set_complement(Set_list* set_list, int set_number)
         }
     }
     printf("\n");
-    
+
     return 1;
 }
 
@@ -1230,7 +1296,7 @@ int is_subset(Set_list *set_list, int set_number_1, int set_number_2)
         has_elem = 0;
     }
     printf("true\n");
-    
+
     return 1;
 }
 
@@ -1344,7 +1410,6 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
     char** second_set = set_list->sets[set_number_2].elements;
     int second_set_size = set_list->sets[set_number_2].cardinality;
 
-    int match = 1;
     if (first_set_size != second_set_size){
         printf("false\n");
     }
@@ -1355,7 +1420,6 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
         for (int i = 0; i < first_set_size; i++){
             if (strcmp(first_set[i], second_set[i]) != 0){
                 printf("false\n");
-                match = 0;
                 return 1;
             }
             else {
@@ -1380,7 +1444,7 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
     if (!check_set_existence(set_list, &set_number_1)
-           || !check_set_existence(set_list, &set_number_2)){
+        || !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1739,9 +1803,9 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
             }
-//            if (!is_surjective(relation_list, set_list, arg_1, arg_2, arg_3)){
-//                return 0;
-//            }
+            if (!is_surjective(relation_list, set_list, arg_1, arg_2, arg_3)){
+                return 0;
+            }
             break;
         }
         case 18:{
@@ -2055,7 +2119,7 @@ int read_option(char *filename)
             fprintf(stderr, "Wrong syntax of input file!\n");
             err_flag = 1;
         }
-        
+
         if (read_command_flag && !set_or_relation_flag){
             fprintf(stderr, "Wrong syntax of input file!\n");
             err_flag = 1;
@@ -2070,7 +2134,7 @@ int read_option(char *filename)
         if (!read_command_flag){
             fprintf(stderr, "No commands in input file!\n");
             err_flag = 1;
-        }        
+        }
     }
 
     free_set_list(&set_list);
