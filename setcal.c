@@ -2,7 +2,7 @@
  * @name setcal.c
  * @details set and relation calculator
  * @authors Marian Taragel, Georgii Troitckii, Tomas Prokop
- * @date 3.12.2021
+ * @date 4.12.2021
  */
 
 #include <stdio.h>
@@ -12,6 +12,12 @@
 
 #define MAX_STRING_LENGTH 30
 #define MAX_LINES 1000
+
+enum commands {EMPTY, CARD, COMPLEMENT, UNION,
+    INTERSECT, MINUS, SUBSETEQ, SUBSET, EQUALS,
+    REFLEXIVE, SYMMETRIC, ANTISYMMETRIC, TRANSITIVE,
+    FUNCTION, DOMAIN, CODOMAIN, INJECTIVE,
+    SURJECTIVE, BIJECTIVE};
 
 typedef struct{
     char **elements;
@@ -562,32 +568,33 @@ int domain_or_codomain(Relation_list* relation_list, int row_number, int codomai
         return 0;
     }
 
-    int size = relation_list->relations[row_number].number_of_pairs;
+    int size_of_relation = relation_list->relations[row_number].number_of_pairs;
 
-    if (size == 0){
+    if (size_of_relation == 0){
         printf("S\n");
         return 1;
     }
 
     Pair *pairs = relation_list->relations[row_number].pairs;
-    char *elements[size];
+    char *elements[size_of_relation];
 
     if (codomain_flag){
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < size_of_relation; i++){
             elements[i] = pairs[i].second;
         }
     }
     else {
-        for (int i = 0; i < size; i++){
+        for (int i = 0; i < size_of_relation; i++){
             elements[i] = pairs[i].first;
         }
     }
 
-    qsort(elements, size, sizeof(char*), str_comparator);
+    qsort(elements, size_of_relation, sizeof(char*), str_comparator);
 
+    /// prints distinct elements
     printf("S");
-    for (int i = 0; i < size; ++i) {
-        while ((i < size - 1) && (strcmp(elements[i], elements[i + 1]) == 0)){
+    for (int i = 0; i < size_of_relation; ++i) {
+        while ((i < size_of_relation - 1) && (strcmp(elements[i], elements[i + 1]) == 0)){
             i++;
         }
         printf(" %s", elements[i]);
@@ -615,24 +622,24 @@ int is_function(Relation_list *relation_list, int row_number)
         return 0;
     }
 
-    int size = relation_list->relations[row_number].number_of_pairs;
+    int size_of_relation = relation_list->relations[row_number].number_of_pairs;
 
-    if (size == 0){
+    if (size_of_relation == 0){
         printf("true\n");
         return 1;
     }
 
     Pair *pairs = relation_list->relations[row_number].pairs;
-    char *elements[size];
+    char *elements[size_of_relation];
 
-    for (int i = 0; i < size; i++){
+    for (int i = 0; i < size_of_relation; i++){
         elements[i] = pairs[i].first;
     }
 
-    qsort(elements, size, sizeof(char*), str_comparator);
+    qsort(elements, size_of_relation, sizeof(char*), str_comparator);
 
-    for (int i = 0; i < size; ++i) {
-        if ((i < size - 1) && (strcmp(elements[i], elements[i + 1]) == 0)){
+    for (int i = 0; i < size_of_relation; ++i) {
+        if ((i < size_of_relation - 1) && (strcmp(elements[i], elements[i + 1]) == 0)){
             printf("false\n");
             return 1;
         }
@@ -933,6 +940,7 @@ int is_surjective(Relation_list *relation_list, Set_list *set_list, int relation
     }
 
     int j = 0;
+    /// Check if codomain contains all elements from set B (second set)
     for (int i = 0; i < size_of_relation; ++i) {
         while ((i < size_of_relation - 1) && (strcmp(codomain_of_relation[i], codomain_of_relation[i + 1]) == 0)) {
             i++;
@@ -1061,23 +1069,23 @@ int is_transitive(Relation_list *relation_list, int row_number)
         return 0;
     }
 
-    int size = relation_list->relations[row_number].number_of_pairs;
+    int size_of_relation = relation_list->relations[row_number].number_of_pairs;
 
-    if (size == 0){
+    if (size_of_relation == 0){
         printf("true\n");
         return 1;
     }
 
     Pair *pairs = relation_list->relations[row_number].pairs;
 
-    for (int i = 0; i < size; i++){
-        for (int j = 0; j < size; j++){
+    for (int i = 0; i < size_of_relation; i++){
+        for (int j = 0; j < size_of_relation; j++){
             if (strcmp(pairs[i].second, pairs[j].first) == 0){
                 Pair pair;
                 pair.first = pairs[i].first;
                 pair.second = pairs[j].second;
 
-                if (!(find_pair(pairs, pair, size))){
+                if (!(find_pair(pairs, pair, size_of_relation))){
                     printf("false\n");
                     return 1;
                 }
@@ -1120,7 +1128,6 @@ int set_complement(Set_list* set_list, int set_number)
     for (int i = 0; i < universe_size; ++i) {
         if ( set_idx < set_size && strcmp(universe_elems[i], given_set_elems[set_idx]) == 0){
             set_idx++;
-            continue;
         }
         else {
             printf(" %s", universe_elems[i]);
@@ -1325,7 +1332,7 @@ int is_subseteq(Set_list *set_list, int set_number_1, int set_number_2)
     char** second_set = set_list->sets[set_number_2].elements;
     int second_set_size = set_list->sets[set_number_2].cardinality;
 
-    // Subseteq can't be greater than superset
+    /// Subseteq can't be greater than superset
     if (first_set_size > second_set_size){
         printf("false\n");
     }
@@ -1397,8 +1404,8 @@ int is_set_empty(Set_list *set_list, int set_number)
 */
 int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if (!check_set_existence(set_list, &set_number_1)
-        || !check_set_existence(set_list, &set_number_2)){
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1442,8 +1449,8 @@ int are_sets_equal(Set_list *set_list, int set_number_1, int set_number_2)
 */
 int intersect_of_sets(Set_list *set_list, int set_number_1, int set_number_2)
 {
-    if (!check_set_existence(set_list, &set_number_1)
-        || !check_set_existence(set_list, &set_number_2)){
+    if (!check_set_existence(set_list, &set_number_1) ||
+        !check_set_existence(set_list, &set_number_2)){
         fprintf(stderr, "Can't step on nonexistent row!\n");
         return 0;
     }
@@ -1603,7 +1610,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
         }
     }
     switch (i){
-        case 0:{
+        case EMPTY:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1613,7 +1620,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 1:{
+        case CARD:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1623,7 +1630,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 2:{
+        case COMPLEMENT:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1633,7 +1640,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 3:{
+        case UNION:{
             if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1647,7 +1654,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 4:{
+        case INTERSECT:{
             if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1661,7 +1668,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 5:{
+        case MINUS:{
             if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1675,7 +1682,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 6:{
+        case SUBSETEQ:{
             if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1689,7 +1696,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 7:{
+        case SUBSET:{
             if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1703,7 +1710,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 8:{
+        case EQUALS:{
             if (!arg_2){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1717,7 +1724,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 9:{
+        case REFLEXIVE:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1727,7 +1734,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 10:{
+        case SYMMETRIC:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1737,7 +1744,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 11:{
+        case ANTISYMMETRIC:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1747,7 +1754,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 12:{
+        case TRANSITIVE:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1757,7 +1764,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 13:{
+        case FUNCTION:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1767,7 +1774,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 14:{
+        case DOMAIN:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1777,7 +1784,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 15:{
+        case CODOMAIN:{
             if (arg_2){
                 fprintf(stderr, "Too many arguments!\n");
                 return 0;
@@ -1787,7 +1794,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 16:{
+        case INJECTIVE:{
             if (!arg_2 || !arg_3){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1797,7 +1804,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 17:{
+        case SURJECTIVE:{
             if (!arg_2 || !arg_3){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1807,7 +1814,7 @@ int read_command(FILE *file, Set_list *set_list, Relation_list *relation_list)
             }
             break;
         }
-        case 18:{
+        case BIJECTIVE:{
             if (!arg_2 || !arg_3){
                 fprintf(stderr, "Too few arguments!\n");
                 return 0;
@@ -1861,6 +1868,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
             return 0;
         }
 
+        /// Read first element of pair
         int index_elem_1 = 0;
         char element_1[31];
         while ((c = fgetc(file)) != ' '){
@@ -1878,6 +1886,7 @@ int read_relation(FILE *file, Relation_list *relation_list, Set_list *set_list, 
             return 0;
         }
 
+        /// Read second element of pair
         int index_elem_2 = 0;
         char element_2[31];
         while ((c = fgetc(file)) != ')'){
