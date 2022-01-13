@@ -127,7 +127,7 @@ S x
 S a b c
 ```
 
-```sh
+```
 $ cat rel.txt
 U dad mom girl boy man woman
 R (dad boy) (dad girl) (mom boy) (mom girl)
@@ -136,7 +136,7 @@ C codomain 2
 C function 3
 ```
 
-```sh
+```
 $ ./setcal rel.txt
 U dad mom girl boy man woman
 R (dad boy) (dad girl) (mom boy) (mom girl)
