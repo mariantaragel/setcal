@@ -107,6 +107,44 @@ Příkaz pracuje nad relacemi a jeho výsledkem je buď pravdivostní hodnota (t
     <li>Všechny prvky množin a v relacích musí patřit do univerza. Pokud se prvek v množině nebo dvojice v relaci opakuje, jedná se o chybu</li>
 </ul>
 
+## Příklady použití
+
+```sh
+$ cat sets.txt
+U a b c x y z
+S a b c x
+S x y z
+C intersect 2 3
+C minus 2 3
+```
+
+```sh
+$ ./setcal sets.txt
+U a b c x y z
+S a b c x
+S x y z
+S x
+S a b c
+```
+
+```sh
+$ cat rel.txt
+U dad mom girl boy man woman
+R (dad boy) (dad girl) (mom boy) (mom girl)
+R (dad man) (boy man) (mom woman) (girl woman)
+C codomain 2
+C function 3
+```
+
+```sh
+$ ./setcal rel.txt
+U dad mom girl boy man woman
+R (dad boy) (dad girl) (mom boy) (mom girl)
+R (dad man) (boy man) (mom woman) (girl woman)
+S boy girl
+true
+```
+
 ## Authors
 
 - [mariantaragel](https://github.com/mariantaragel)
