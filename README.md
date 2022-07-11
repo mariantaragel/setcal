@@ -1,12 +1,5 @@
 # Set Calculator
 
-13,6 / 14
-
-<ul>
- <li>misty spousta duplicitniho kodu, mohla byt lepsi abstrakce v tomto smeru a vyhnuti se duplicitnim castem</li>
- <li>komentarove separatory se hodi ale treba jen mezi bloky funkci (ktere spolu souvisi) ne nutne mezi kazdou funkci</li>
-</ul>
-
 ## Popis projektu
 
 Cílem projektu je vytvořit program, který bude implementovat základní matematické operace nad množinami a binárními relacemi. Vstupem programu budou textová data reprezentující množiny a relace a zadání operací. Výsledek zpracování bude program tisknout na standardní výstup.
